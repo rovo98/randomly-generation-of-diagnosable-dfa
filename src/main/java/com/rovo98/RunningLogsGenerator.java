@@ -37,7 +37,7 @@ public class RunningLogsGenerator {
      * @param logSize the number of the running logs to be generated.
      * @param dfa     A constructed DFA.
      */
-    public static void generate(int logSize, DFANode dfa) {
+    public static void generate(int logSize, DFANode dfa, boolean saveToFile) {
         // FIXME: refactoring may be needed, dfa should be constructed and Config should well prepared.
 
         LOGGER.info("Generating running logs..., size: {}", logSize);
@@ -68,15 +68,17 @@ public class RunningLogsGenerator {
             LOGGER.info("====>\t faulty logs, T{}: {}", (i + 1), statistics[i + 1]);
 
         // Saving the logs to file.
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String filename = Base64.encode((Config.stateSize + ":" + Config.faultyStateSize).getBytes());
-        filename = df.format(new Date()).concat("_").concat(filename).concat("_running-logs.txt");
-        save(filename);
+        if (saveToFile) {
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String filename = Base64.encode((Config.stateSize + ":" + Config.faultyStateSize).getBytes());
+            filename = df.format(new Date()).concat("_").concat(filename).concat("_running-logs.txt");
+            save(filename);
+        }
     }
 
     private static String unvisitedTraversal(int stopSteps, DFANode root) {
 
-        LOGGER.debug("constructing a log using unvisited approach, len->{}", stopSteps);
+        LOGGER.debug("constructing a log using unvisited approach, expected len->{}", stopSteps);
         boolean[] visited = new boolean[Config.stateSize];
         DFANode pNode = root;
         StringBuilder log = new StringBuilder();
@@ -118,13 +120,13 @@ public class RunningLogsGenerator {
 
     private static String containsVisited(int stopSteps, DFANode root) {
 
-        LOGGER.debug("constructing a log using visited approach, len->{}", stopSteps);
+        LOGGER.debug("constructing a log using visited approach, expected len->{}", stopSteps);
         DFANode pNode = root;
         StringBuilder log = new StringBuilder();
         while (stopSteps > 0) {
             Random r = new Random();
             Character[] symbols = pNode.transitions.keySet().toArray(new Character[0]);
-//            System.out.println("current symbols " + Arrays.toString(symbols));
+            // if no transitions for current node. stop traversing.
             if (symbols.length == 0)
                 break;
             // navigating to the next unvisited node.
@@ -134,7 +136,7 @@ public class RunningLogsGenerator {
             log.append(symbol);
             stopSteps--;
         }
-        LOGGER.debug("Generated observation: {}", log.toString());
+        LOGGER.debug("Generated observation({}): {}", log.toString().length(), log.toString());
         return attachingLabel(log);
     }
 
@@ -165,9 +167,9 @@ public class RunningLogsGenerator {
             // writes statics info as the first line.
             String statisticInfo = "";
             statisticInfo = statisticInfo.concat("Logs size: " + runningLogs.size())
-            .concat(", Normal logs: " + statistics[0]);
+                    .concat(", Normal logs: " + statistics[0]);
             for (int i = 0; i < Config.faultyEvents.length; i++) {
-                statisticInfo = statisticInfo.concat(", T" + (i+1) + " logs: " + statistics[i+1]);
+                statisticInfo = statisticInfo.concat(", T" + (i + 1) + " logs: " + statistics[i + 1]);
             }
             bfw.write(statisticInfo);
             bfw.newLine();
@@ -185,11 +187,14 @@ public class RunningLogsGenerator {
     }
 
     /**
-     * Driver the program to test the methods above.
+     * Driver the program to test generating logs.
      *
      * @param args command-line arguments.
      */
     public static void main(String[] args) {
-        RunningLogsGenerator.generate(100, new SimpleDFAConstructor().constructRandomDFA(50, 100));
+        RunningLogsGenerator.generate(
+                50,
+                new SimpleDFAConstructor().constructRandomDFA(50, 100),
+                false);
     }
 }

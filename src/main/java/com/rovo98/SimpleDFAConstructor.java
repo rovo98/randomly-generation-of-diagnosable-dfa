@@ -93,9 +93,9 @@ public class SimpleDFAConstructor implements DFAConstructor {
         for (int state : unvisitedStates)
             unvisitedList.add(state);
 
+        Random r = new Random();
         DFANode pNode = root;
         while (steps < size) {     // stop condition: when all states are visited and do one more iteration.
-            Random r = new Random();
             // randomly choose another state from unvisited states set.
             int nextXIndex = r.nextInt(unvisitedList.size());
             int nextState = unvisitedList.get(nextXIndex);
@@ -105,9 +105,9 @@ public class SimpleDFAConstructor implements DFAConstructor {
                 Config.statesMap.put(nextState, nextNode);
             }
             addRandomTransition(pNode, nextState);
-            // for every node, attaching it with 2 ~ 3 nodes.
+            // for every node, attaching it with 2 ~ 4 nodes.
             // including itself. adding more nodes.
-            int connections = r.nextInt(2) + 1;
+            int connections = r.nextInt(3) + 1;
 
             for (int i = 0; i < connections; i++) {
                 // randomly choose one state (can be visited, btw, itself is adapted)
@@ -120,14 +120,10 @@ public class SimpleDFAConstructor implements DFAConstructor {
             }
 
             // navigating to one unvisited node.
-            Character[] transitionSymbols = pNode.transitions.keySet().toArray(new Character[0]);
-            int symbolSize = transitionSymbols.length;
-            int navigatingSymbolIndex = r.nextInt(symbolSize);
-            while (pNode.transitions.get(transitionSymbols[navigatingSymbolIndex]) == pNode.state ||
-                    visited[pNode.transitions.get(transitionSymbols[navigatingSymbolIndex])])
-                navigatingSymbolIndex = r.nextInt(symbolSize);
+            Character[] unvisitedTransitionSymbols = getUnvisitedTransitionSymbols(pNode, visited);
 
-            pNode = pNode.navigate(transitionSymbols[navigatingSymbolIndex]);
+            int navigatingSymbolIndex = r.nextInt(unvisitedTransitionSymbols.length);
+            pNode = pNode.navigate(unvisitedTransitionSymbols[navigatingSymbolIndex]);
 
             // mark new income state as visited.
             if (!visited[pNode.state]) {
@@ -147,15 +143,20 @@ public class SimpleDFAConstructor implements DFAConstructor {
         return root;
     }
 
+    // Returns symbols set (non leading to current node or visited nodes.
+    private static Character[] getUnvisitedTransitionSymbols(DFANode curr, boolean[] visited) {
+        return curr.transitions.keySet().stream()
+                .filter(s ->
+                        curr.transitions.get(s) != curr.state && !visited[curr.transitions.get(s)]
+                ).toArray(Character[]::new);
+    }
+
     // Randomly add transition for the given dfa node.
     private void addRandomTransition(DFANode curr, int nextState) {
         // randomly choose a symbol from observable events set \ transition events.
         // Choose a symbol (event) not in transition table of current node already.
         Random r = new Random();
         int observableEventSize = Config.observableEvents.length;
-//        int nextSymbolIndex = r.nextInt(observableEventSize);
-//        int randomTimesThreshold = 0;
-//        boolean isNeedToAddTransition = true;
 
         Character[] obs = new Character[observableEventSize];
         for (int i = 0; i < observableEventSize; i++)
@@ -165,25 +166,15 @@ public class SimpleDFAConstructor implements DFAConstructor {
                 .filter(s -> {
                     for (char c : curr.transitions.keySet())
                         if (c == s) return false;
-                        return true;
+                    return true;
                 }).toArray(Character[]::new);
 
         // if all symbols are attached to current node, skipping it.
         if (unattachedSymbols.length == 0)
             return;
 
-//        while (curr.transitions.containsKey(Config.observableEvents[nextSymbolIndex])) {
-//            if (randomTimesThreshold > 5) {
-//                isNeedToAddTransition = false;
-//                break;
-//            }
-//            nextSymbolIndex = r.nextInt(observableEventSize);
-//            randomTimesThreshold++;
-//        }
-
         int nextSymbolIndex = r.nextInt(unattachedSymbols.length);
-        char nextSymbol = Config.observableEvents[nextSymbolIndex];
-//        if (isNeedToAddTransition)
+        char nextSymbol = unattachedSymbols[nextSymbolIndex];
         curr.addTransition(nextSymbol, nextState);
     }
 
@@ -203,13 +194,15 @@ public class SimpleDFAConstructor implements DFAConstructor {
         int rt = r.nextInt(41) + 10; // 10 ~ 50
         while (rt > 0) {
             Character[] symbols = pNode.transitions.keySet().toArray(new Character[0]);
-            // FIXME: got empty symbols set sometimes, component constructing algorithm may need to be refactored.
             // filtering the unobservable events
             symbols = Arrays.stream(symbols).filter(s -> {
                 for (char c : Config.unobservableEvents)
                     if (s == c) return false;
                 return true;
             }).toArray(Character[]::new);
+            // FIXME: Refactor may be needed, got empty symbols sometimes. <<<
+            // technically stopping when no transitions already.
+            if (symbols.length == 0) break;
             char symbol = symbols[r.nextInt(symbols.length)];
             pNode = pNode.navigate(symbol);
             rt--;
