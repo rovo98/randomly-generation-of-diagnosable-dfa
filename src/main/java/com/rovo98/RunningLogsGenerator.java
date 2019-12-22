@@ -31,6 +31,13 @@ public class RunningLogsGenerator {
 
     private static int[] statistics;
 
+    private static boolean showGeneratedLogs = false;
+
+    //Whether to show every generated logs.
+    private static void setVerbose(boolean verbose) {
+        showGeneratedLogs = verbose;
+    }
+
     /**
      * Generates running logs of the given {@code dfa}
      *
@@ -49,15 +56,11 @@ public class RunningLogsGenerator {
 
         for (int i = 0; i < logSize; i++) {
             Random r = new Random();
-            runningLogs.add(containsVisited(r.nextInt(maxSteps - minSteps + 1) + minSteps, dfa));
-//            if (r.nextInt(2) > 0)
-//                runningLogs.add(
-//                        unvisitedTraversal(r.nextInt(maxSteps - minSteps + 1) + minSteps, dfa));
-//            else
-//                runningLogs.add(
-//                        containsVisited(r.nextInt(maxSteps - minSteps + 1) + minSteps, dfa));
+            runningLogs.add(containsVisitedTraversal(
+                    r.nextInt(maxSteps - minSteps + 1) + minSteps, dfa));
         }
-        // do statistic
+
+        // statistic infos
         for (String l : runningLogs) {
             int index = Integer.parseInt(String.valueOf(l.charAt(l.length() - 1)));
             statistics[index]++;
@@ -70,36 +73,12 @@ public class RunningLogsGenerator {
         // Saving the logs to file.
         if (saveToFile) {
             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String filename = Base64.encode((Config.stateSize + ":" + Config.faultyStateSize).getBytes());
+            String basicInfo = "s" + Config.stateSize + ":fs" + Config.faultyStateSize +
+                    ":as" + Config.alphabet.length + ":fes" + Config.faultyEvents.length;
+            String filename = Base64.encode(basicInfo.getBytes());
             filename = df.format(new Date()).concat("_").concat(filename).concat("_running-logs.txt");
             save(filename);
         }
-    }
-
-    private static String unvisitedTraversal(int stopSteps, DFANode root) {
-
-        LOGGER.debug("constructing a log using unvisited approach, expected len->{}", stopSteps);
-        boolean[] visited = new boolean[Config.stateSize];
-        DFANode pNode = root;
-        StringBuilder log = new StringBuilder();
-        while (stopSteps > 0) {
-            // marked the state as visited.
-            visited[pNode.state] = true;
-            Random r = new Random();
-            Character[] symbols = pNode.transitions.keySet().toArray(new Character[0]);
-            if (symbols.length == 0)
-                break;
-            // navigating to the next unvisited node.
-            char symbol = symbols[r.nextInt(symbols.length)];
-            while (visited[pNode.navigate(symbol).state])
-                symbol = symbols[r.nextInt(symbols.length)];
-
-            pNode = pNode.navigate(symbol);
-            log.append(symbol);
-            stopSteps--;
-        }
-        LOGGER.debug("Generated observation: {}", log.toString());
-        return attachingLabel(log);
     }
 
     private static String attachingLabel(StringBuilder log) {
@@ -113,14 +92,16 @@ public class RunningLogsGenerator {
         }
         if (log.toString().indexOf('T') < 0)
             log.append("T0");
-        LOGGER.debug("Generated log: {}", log.toString());
+
+        if (showGeneratedLogs)
+            LOGGER.debug("Generated log: {}", log.toString());
 
         return log.toString();
     }
 
-    private static String containsVisited(int stopSteps, DFANode root) {
-
-        LOGGER.debug("constructing a log using visited approach, expected len->{}", stopSteps);
+    private static String containsVisitedTraversal(int stopSteps, DFANode root) {
+        if (showGeneratedLogs)
+            LOGGER.debug("constructing a log using visited approach, expected len->{}", stopSteps);
         DFANode pNode = root;
         StringBuilder log = new StringBuilder();
         while (stopSteps > 0) {
@@ -136,7 +117,8 @@ public class RunningLogsGenerator {
             log.append(symbol);
             stopSteps--;
         }
-        LOGGER.debug("Generated observation({}): {}", log.toString().length(), log.toString());
+        if (showGeneratedLogs)
+            LOGGER.debug("Generated observation({}): {}", log.toString().length(), log.toString());
         return attachingLabel(log);
     }
 
@@ -192,8 +174,9 @@ public class RunningLogsGenerator {
      * @param args command-line arguments.
      */
     public static void main(String[] args) {
+        RunningLogsGenerator.setVerbose(true);
         RunningLogsGenerator.generate(
-                50,
+                100,
                 new SimpleDFAConstructor().constructRandomDFA(50, 100),
                 false);
     }
