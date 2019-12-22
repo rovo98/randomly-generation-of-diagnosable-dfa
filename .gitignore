@@ -1,3 +1,7 @@
 .idea
-*.xml
-./target/
+*.iml
+.project
+.classpath
+.settings
+target/
+log/
