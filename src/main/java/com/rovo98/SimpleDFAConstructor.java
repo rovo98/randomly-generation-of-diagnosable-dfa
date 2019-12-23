@@ -20,11 +20,10 @@ public class SimpleDFAConstructor implements DFAConstructor {
 
     @Override
     public DFANode constructRandomDFA(int minXNum, int maxXNum) {
-
+        // TODO: range checking may be needed or refactoring
         if (minXNum < 50 || maxXNum > 500) {
             throw new IllegalArgumentException("Given minXNum should be >= 50, maxXNum should be <= 500");
         }
-        // FIXME: range checking may be needed or refactoring
         LOGGER.info("Do preparation before constructing the DFA...");
         Config.initialization(minXNum, maxXNum);
         LOGGER.info("Preparation done.");
@@ -77,7 +76,7 @@ public class SimpleDFAConstructor implements DFAConstructor {
      * @return Constructed direct graph.
      */
     private DFANode constructGraphComponent(int start, int end) {
-        // FIXME: index range validation may needed.
+        // TODO: index range validation may needed.
         int size = end - start;
         int steps = 0;
         boolean[] visited = new boolean[Config.stateSize];
@@ -111,7 +110,7 @@ public class SimpleDFAConstructor implements DFAConstructor {
 
             for (int i = 0; i < connections; i++) {
                 // randomly choose one state (can be visited, btw, itself is adapted)
-                int ns = r.nextInt(size);
+                int ns = r.nextInt(size) + start;
                 if (!Config.statesMap.containsKey(Config.states[ns])) {
                     DFANode newNode = new DFANode(Config.states[ns]);
                     Config.statesMap.put(Config.states[ns], newNode);
@@ -131,11 +130,11 @@ public class SimpleDFAConstructor implements DFAConstructor {
                 unvisitedList.remove((Integer) pNode.state);
                 steps++;
             }
-            // for last visited node. add 1~3 more transitions.
+            // for last visited node. add 1~2 more transitions.
             if (steps == size) {
-                int c = r.nextInt(3) + 1;
+                int c = r.nextInt(2) + 1;
                 for (int i = 0; i < c; i++) {
-                    int ns = r.nextInt(size);
+                    int ns = r.nextInt(size) + start;
                     addRandomTransition(pNode, Config.states[ns]);
                 }
             }
@@ -193,16 +192,13 @@ public class SimpleDFAConstructor implements DFAConstructor {
         Random r = new Random();
         int rt = r.nextInt(41) + 10; // 10 ~ 50
         while (rt > 0) {
-            Character[] symbols = pNode.transitions.keySet().toArray(new Character[0]);
             // filtering the unobservable events
-            symbols = Arrays.stream(symbols).filter(s -> {
-                for (char c : Config.unobservableEvents)
-                    if (s == c) return false;
-                return true;
-            }).toArray(Character[]::new);
-            // FIXME: Refactor may be needed, got empty symbols sometimes. <<<
-            // technically stopping when no transitions already.
-            if (symbols.length == 0) break;
+            Character[] symbols = pNode.transitions.keySet().stream()
+                    .filter(s -> {
+                        for (char c : Config.unobservableEvents)
+                            if (c == s) return false;
+                        return true;
+                    }).toArray(Character[]::new);
             char symbol = symbols[r.nextInt(symbols.length)];
             pNode = pNode.navigate(symbol);
             rt--;

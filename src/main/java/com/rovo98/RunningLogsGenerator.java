@@ -33,8 +33,13 @@ public class RunningLogsGenerator {
 
     private static boolean showGeneratedLogs = false;
 
-    //Whether to show every generated logs.
-    private static void setVerbose(boolean verbose) {
+    //Whether to show every generated logs as debug infos in console.
+    /**
+     * settings control whether to print out the debug msg for every generated logs.
+     *
+     * @param verbose {@code true} for yes, and {@code false} for no
+     */
+    public static void setVerbose(boolean verbose) {
         showGeneratedLogs = verbose;
     }
 
@@ -45,7 +50,7 @@ public class RunningLogsGenerator {
      * @param dfa     A constructed DFA.
      */
     public static void generate(int logSize, DFANode dfa, boolean saveToFile) {
-        // FIXME: refactoring may be needed, dfa should be constructed and Config should well prepared.
+        // TODO: dfa validation may be needed, dfa should be constructed and Config should well prepared.
 
         LOGGER.info("Generating running logs..., size: {}", logSize);
 
@@ -153,6 +158,12 @@ public class RunningLogsGenerator {
             for (int i = 0; i < Config.faultyEvents.length; i++) {
                 statisticInfo = statisticInfo.concat(", T" + (i + 1) + " logs: " + statistics[i + 1]);
             }
+            // add observable event set info
+            String obsInfo = "[";
+            for (char c : Config.observableEvents)
+                obsInfo = obsInfo.concat(c + ",");
+            obsInfo = obsInfo.substring(0, obsInfo.length()-1).concat("]");
+            statisticInfo = statisticInfo.concat(" observable events:").concat(obsInfo);
             bfw.write(statisticInfo);
             bfw.newLine();
 
@@ -174,10 +185,10 @@ public class RunningLogsGenerator {
      * @param args command-line arguments.
      */
     public static void main(String[] args) {
-        RunningLogsGenerator.setVerbose(true);
+        RunningLogsGenerator.setVerbose(false);
         RunningLogsGenerator.generate(
-                100,
+                100000,
                 new SimpleDFAConstructor().constructRandomDFA(50, 100),
-                false);
+                true);
     }
 }

@@ -3,7 +3,7 @@
 
 最终的目标是可能实现伪随机或完全随机，但是现在是使用人为的方式来构建 complete DFA.
 
-### 1. Constructing a DFA to generate running logs.
+## 1. Constructing a DFA to generate running logs.
 
 现阶段，首先考虑人为构造一个简单的、可诊断的 DFA，以生成可供实验的数据 (running-logs)。
 
@@ -54,6 +54,43 @@ Issues: 如何确保在生成 running logs 时，每一种错误类型的观察�
 
 > NOTICE: 这种产生日志方式会有可能有重复日志出现 (进行去重复操作)。
 
+### Example
 
-NOTICE: 根据 DES 的可诊断性定义，当前构造方式的构造的 DFA 是可诊断的，因此产生的所有 running-logs 数据就是符合要求的数据。
+使用上面方式生成 DFA 的一个例子。
+
+![dfa-example-01](./images/DFA-construction-examle-01.png)
+> 图示，选择的总状态集大小为 63, 错误状态集大小为 6, 输入字母表 alphabet 大小为 15, 错误事件集 (unobservable) 大小为 3, 错误事件集为 ``[l, m, z]``。
+>
+> 选择 states[0,56] 来构建状态状态集， states[57,58], states[59:60], states[61:62] 作为错误状态集。
+
+使用 debug 的方式，来查看我们构建出来的组件, DFA。
+
+![dfa-example-02](./images/DFA-construction-examle-02.png)
+> 一个正常状态集构成的组件，三个错误状态集构成的组件。
+
+1. 错误状态集 1 (states[57:58]) 构建的组件
+![dfa-example-03](./images/DFA-construction-examle-03_faulty_1.png)
+2. 错误状态集 2 (states[59:60]) 构建的组件
+![dfa-example-04](./images/DFA-construction-examle-03_faulty_2.png)
+3. 错误状态集 3 (states[61:62]) 构建的组件
+![dfa-example-05](./images/DFA-construction-examle-03_faulty_3.png)
+
+> 可以看到，每个错误状态组件中发生的状态转换，得到下一个状态只能是该组件中的状态。
+
+并且，对于每个错误状态组件，正常状态组件中只有一个相应的错误状态转换。将正常状态组件与所有错误状态组件连接后，正常状态组件中存在错误状态转换的节点如下:
+
+1. 错误事件 ``z`` 对应的状态转换
+![dfa-example-06](./images/DFA-construction-examle-04_faulty_1.png)
+2. 错误事件 ``m`` 对应的状态转换
+![dfa-example-07](./images/DFA-construction-examle-04_faulty_2.png)
+3. 错误事件 ``l`` 对应的状态转换
+![dfa-example-08](./images/DFA-construction-examle-04_faulty_3.png)
+
+> NOTICE: 允许多个错误状态转换出现在同一个节点上。
+
+以上是一个简单的 DFA 构建例子，状态集比较小，为了满足错误状态集远小于正常状态集，这使得每个错误状态集变得更小。
+
+### Remarks
+
+根据 DES 的可诊断性定义，当前构造方式的构造的 DFA 是可诊断的，因此产生的所有 running-logs 数据就是符合要求的数据。
 
