@@ -62,7 +62,12 @@ public class Config {
             tempFlags[tempIndex] = true;
             alphabet[i] = alphabetSpace.charAt(tempIndex);
         }
-        int faultSize = maxXSize < 100 ? 4 : Math.min(10, faultyStateSize / 2);
+        // faulty event size (make sure less than a half of alphabet size)
+        // 4 ~ 6
+        int faultSize = 4;
+        if (alphabetSize > 15 && (faultyStateSize / faultSize) > 3) {
+            faultSize = faultSize + r.nextInt(2) + 1;
+        }
         faultyEvents = new int[faultSize];
 
         LOGGER.debug("Chosen faulty event size: {}", faultSize);

@@ -190,7 +190,7 @@ public class SimpleDFAConstructor implements DFAConstructor {
         // traverses several steps, and then adding the faulty transition
         // to the node which we stop at.
         Random r = new Random();
-        int rt = r.nextInt(41) + 10; // 10 ~ 50
+        int rt = r.nextInt(21) + 10; // 10 ~ 30
         while (rt > 0) {
             // filtering the unobservable events
             Character[] symbols = pNode.transitions.keySet().stream()

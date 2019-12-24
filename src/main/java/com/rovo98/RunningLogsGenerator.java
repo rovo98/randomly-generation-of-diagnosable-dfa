@@ -27,7 +27,7 @@ public class RunningLogsGenerator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RunningLogsGenerator.class);
 
-    private static Set<String> runningLogs = new HashSet<>();
+    private static Set<String> runningLogs;
 
     private static int[] statistics;
 
@@ -36,6 +36,7 @@ public class RunningLogsGenerator {
     //Whether to show every generated logs as debug infos in console.
     /**
      * settings control whether to print out the debug msg for every generated logs.
+     * False by default.
      *
      * @param verbose {@code true} for yes, and {@code false} for no
      */
@@ -54,6 +55,7 @@ public class RunningLogsGenerator {
 
         LOGGER.info("Generating running logs..., size: {}", logSize);
 
+        runningLogs = new HashSet<>(logSize);
         statistics = new int[Config.faultyEvents.length + 1];
 
         int minSteps = 30;
@@ -185,10 +187,10 @@ public class RunningLogsGenerator {
      * @param args command-line arguments.
      */
     public static void main(String[] args) {
-        RunningLogsGenerator.setVerbose(false);
+        RunningLogsGenerator.setVerbose(true);
         RunningLogsGenerator.generate(
-                100000,
-                new SimpleDFAConstructor().constructRandomDFA(50, 100),
-                true);
+                100,
+                new SimpleDFAConstructor().constructRandomDFA(100, 300),
+                false);
     }
 }
