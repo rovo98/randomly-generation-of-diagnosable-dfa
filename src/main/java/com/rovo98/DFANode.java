@@ -44,9 +44,11 @@ public class DFANode {
      * @return DFA node with the next state of the specified transition.
      * @throws SymbolNotFound if the given symbol of specified transition not found.
      */
-    public DFANode navigate(char symbol) {
+    public DFANode navigate(char symbol, Config dfaConfig) {
         if (!transitions.containsKey(symbol))
             throw new SymbolNotFound("symbol of specified transition not found: " + symbol);
-        return Config.statesMap.get(transitions.get(symbol));
+        return dfaConfig.statesMap.get(transitions.get(symbol));
     }
+
+    // TODO: code refactoring may needed. current implementation is less elegant.
 }

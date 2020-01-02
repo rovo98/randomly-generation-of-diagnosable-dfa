@@ -17,4 +17,11 @@ public interface DFAConstructor {
      * @return constructed random DFA.
      */
     DFANode constructRandomDFA(int minXNum, int maxXNum);
+
+    /**
+     * Returns the configuration of the DFA constructor.
+     *
+     * @return configuration of current DFA constructor, an object of  {@code Config}.
+     */
+    Config getConfig();
 }

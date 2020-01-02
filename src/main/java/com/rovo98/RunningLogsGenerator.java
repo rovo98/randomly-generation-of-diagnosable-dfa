@@ -33,7 +33,11 @@ public class RunningLogsGenerator {
 
     private static boolean showGeneratedLogs = false;
 
+    private static int minSteps = 30;
+    private static int maxSteps = 100;
+
     //Whether to show every generated logs as debug infos in console.
+
     /**
      * settings control whether to print out the debug msg for every generated logs.
      * False by default.
@@ -45,26 +49,52 @@ public class RunningLogsGenerator {
     }
 
     /**
+     * Setting minimum length of the generated log.
+     * By default, 30 is token.
+     *
+     * @param ms An Integer representing minimum length of the log to be generated.
+     */
+    public static void setMinSteps(int ms) {
+        minSteps = ms;
+    }
+
+    /**
+     * Setting maximum length of the generated log.
+     * By default, 100 is token
+     *
+     * @param ms An Integer representing maximum length of the log to be generated.
+     */
+    public static void setMaxSteps(int ms) {
+        maxSteps = ms;
+    }
+
+    /**
      * Generates running logs of the given {@code dfa}
      *
-     * @param logSize the number of the running logs to be generated.
-     * @param dfa     A constructed DFA.
+     * @param logSize    the number of the running logs to be generated.
+     * @param dfa        A DFA constructor instance.
+     * @param minXNum    the minimum number of the states in dfa to constructed.
+     * @param maxXNum    the maximum number of the states in dfa to constructed.
+     * @param saveToFile whether to save the generated logs to file.
      */
-    public static void generate(int logSize, DFANode dfa, boolean saveToFile) {
+    public static void generate(int logSize, DFAConstructor dfa, int minXNum, int maxXNum, boolean saveToFile) {
         // TODO: dfa validation may be needed, dfa should be constructed and Config should well prepared.
+
+        // constructing the dfa first (initialize the configuration of the dfa constructor).
+        DFANode dfaRoot = dfa.constructRandomDFA(minXNum, maxXNum);
+        Config dfaConfig = dfa.getConfig();
+        // FIXME: code refactoring is needed here, the constructed dfa should be diagnosable before
+        // using it to generate logs.
 
         LOGGER.info("Generating running logs..., size: {}", logSize);
 
         runningLogs = new HashSet<>(logSize);
-        statistics = new int[Config.faultyEvents.length + 1];
-
-        int minSteps = 30;
-        int maxSteps = 100;
+        statistics = new int[dfaConfig.faultyEvents.length + 1];
 
         for (int i = 0; i < logSize; i++) {
             Random r = new Random();
             runningLogs.add(containsVisitedTraversal(
-                    r.nextInt(maxSteps - minSteps + 1) + minSteps, dfa));
+                    r.nextInt(maxSteps - minSteps + 1) + minSteps, dfaRoot, dfaConfig));
         }
 
         // statistic infos
@@ -74,25 +104,25 @@ public class RunningLogsGenerator {
         }
         LOGGER.info("Running logs generated.All (duplicates removed): {} Normal logs: {}",
                 runningLogs.size(), statistics[0]);
-        for (int i = 0; i < Config.faultyEvents.length; i++)
+        for (int i = 0; i < dfaConfig.faultyEvents.length; i++)
             LOGGER.info("====>\t faulty logs, T{}: {}", (i + 1), statistics[i + 1]);
 
         // Saving the logs to file.
         if (saveToFile) {
             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String basicInfo = "s" + Config.stateSize + ":fs" + Config.faultyStateSize +
-                    ":as" + Config.alphabet.length + ":fes" + Config.faultyEvents.length;
+            String basicInfo = "s" + dfaConfig.stateSize + ":fs" + dfaConfig.faultyStateSize +
+                    ":as" + dfaConfig.alphabet.length + ":fes" + dfaConfig.faultyEvents.length;
             String filename = Base64.encode(basicInfo.getBytes());
             filename = df.format(new Date()).concat("_").concat(filename).concat("_running-logs.txt");
-            save(filename);
+            save(filename, dfaConfig);
         }
     }
 
-    private static String attachingLabel(StringBuilder log) {
-        for (int i = 0; i < Config.unobservableEvents.length; i++) {
-            if (log.toString().indexOf(Config.unobservableEvents[i]) >= 0) {
+    private static String attachingLabel(StringBuilder log, Config dfaConfig) {
+        for (int i = 0; i < dfaConfig.unobservableEvents.length; i++) {
+            if (log.toString().indexOf(dfaConfig.unobservableEvents[i]) >= 0) {
                 log = new StringBuilder(log.toString()
-                        .replaceAll(Config.unobservableEvents[i] + "", ""));
+                        .replaceAll(dfaConfig.unobservableEvents[i] + "", ""));
                 log.append("T").append(i + 1);
                 break;
             }
@@ -106,7 +136,7 @@ public class RunningLogsGenerator {
         return log.toString();
     }
 
-    private static String containsVisitedTraversal(int stopSteps, DFANode root) {
+    private static String containsVisitedTraversal(int stopSteps, DFANode root, Config dfaConfig) {
         if (showGeneratedLogs)
             LOGGER.debug("constructing a log using visited approach, expected len->{}", stopSteps);
         DFANode pNode = root;
@@ -120,13 +150,13 @@ public class RunningLogsGenerator {
             // navigating to the next unvisited node.
             char symbol = symbols[r.nextInt(symbols.length)];
 
-            pNode = pNode.navigate(symbol);
+            pNode = pNode.navigate(symbol, dfaConfig);
             log.append(symbol);
             stopSteps--;
         }
         if (showGeneratedLogs)
             LOGGER.debug("Generated observation({}): {}", log.toString().length(), log.toString());
-        return attachingLabel(log);
+        return attachingLabel(log, dfaConfig);
     }
 
     /**
@@ -134,7 +164,7 @@ public class RunningLogsGenerator {
      *
      * @param filename the name of the file to save logs.
      */
-    public static void save(String filename) {
+    private static void save(String filename, Config dfaConfig) {
 
         LOGGER.info("Saving the generated logs to file : {}", filename);
         // loads storage location config.
@@ -157,14 +187,14 @@ public class RunningLogsGenerator {
             String statisticInfo = "";
             statisticInfo = statisticInfo.concat("Logs size: " + runningLogs.size())
                     .concat(", Normal logs: " + statistics[0]);
-            for (int i = 0; i < Config.faultyEvents.length; i++) {
+            for (int i = 0; i < dfaConfig.faultyEvents.length; i++) {
                 statisticInfo = statisticInfo.concat(", T" + (i + 1) + " logs: " + statistics[i + 1]);
             }
             // add observable event set info
             String obsInfo = "[";
-            for (char c : Config.observableEvents)
+            for (char c : dfaConfig.observableEvents)
                 obsInfo = obsInfo.concat(c + ",");
-            obsInfo = obsInfo.substring(0, obsInfo.length()-1).concat("]");
+            obsInfo = obsInfo.substring(0, obsInfo.length() - 1).concat("]");
             statisticInfo = statisticInfo.concat(" observable events:").concat(obsInfo);
             bfw.write(statisticInfo);
             bfw.newLine();
@@ -188,9 +218,12 @@ public class RunningLogsGenerator {
      */
     public static void main(String[] args) {
         RunningLogsGenerator.setVerbose(true);
+        RunningLogsGenerator.setMinSteps(50);
+        RunningLogsGenerator.setMaxSteps(100);
         RunningLogsGenerator.generate(
-                100,
-                new SimpleDFAConstructor().constructRandomDFA(100, 300),
+                1_00,
+                new SimpleDFAConstructor(),
+                50, 100,
                 false);
     }
 }
