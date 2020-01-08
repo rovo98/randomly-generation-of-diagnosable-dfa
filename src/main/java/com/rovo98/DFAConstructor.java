@@ -23,5 +23,5 @@ public interface DFAConstructor {
      *
      * @return configuration of current DFA constructor, an object of  {@code Config}.
      */
-    Config getConfig();
+    DFAConfig getDFAConfig();
 }

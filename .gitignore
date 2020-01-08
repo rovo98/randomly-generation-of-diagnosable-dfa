@@ -5,3 +5,6 @@
 .settings
 target/
 log/
+
+# ignoring constructed dfa config files.
+#constructed-dfa/

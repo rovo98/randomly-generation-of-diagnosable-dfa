@@ -9,6 +9,8 @@ package com.rovo98.exceptions;
  */
 public class SymbolNotFound extends RuntimeException {
 
+    private static final long serialVersionUID = -5657518998473264766L;
+
     public SymbolNotFound() {
         super();
     }

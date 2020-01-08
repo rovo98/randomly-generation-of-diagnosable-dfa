@@ -14,6 +14,8 @@
 3. 根据错误模式数量，人为地将状态集划分为多个状态集 (|$X_{f1}$|, ..., |$X_{fn}$|, |$X_n$|, 一个正常状态集，其他均为错误状态集)；
 4. 所有错误状态集中状态加起来应该远小于正常的状态集中的状态数量。
 
+> TODO: 这种方式创建的 DFA, 其产生的日志非常有特点，可以考虑为多个错误状态集添加一个封闭的另一个正常状态集供它们进行跳转。
+
 一个简单的例子如下:
 
 ![construction-of-dfas-without-randomization](./images/non-randomly-construction-of-dfas-with-faulty-events.png)
@@ -90,15 +92,27 @@ Issues: 如何确保在生成 running logs 时，每一种错误类型的观察�
 
 以上是一个简单的 DFA 构建例子，状态集比较小，为了满足错误状态集远小于正常状态集，这使得每个错误状态集变得更小。
 
-### Remarks
+### more illustration examples
 
-根据 DES 的可诊断性定义，当前构造方式的构造的 DFA 是可诊断的，因此产生的所有 running-logs 数据就是符合要求的数据。
+![](./images/dfa-example_01_czE0OmZzNDphczk6ZmVzMg==_arch.jpg)
+![](./images/dfa-example_02_czE2OmZzNDphczg6ZmVzMg==_arch.png)
+![](./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_arch.png)
+![](./images/dfa-example_04_czE5OmZzNDphczE1OmZlczI=_arch.jpg)
+![](./images/dfa-example_05_czE5OmZzNDphczEzOmZlczI=_arch.jpg)
+![](./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_arch.png)
+
+<del>### Remarks</del>
+
+<del>根据 DES 的可诊断性定义，当前构造方式的构造的 DFA 是可诊断的，因此产生的所有 running-logs 数据就是符合要求的数据。</del>
 
 ### Issues
 
 当前实现方案中，产生的 DFA，它的错误状态集比小，则当一个节点通过状态转换到达某个错误状态集组件中时，它后续进行的状态转换，产生的 observation 会有明显的规律。
 
 #### 1. 可诊断性无法保证。需要利用 jiang 的多项式时间判断方法来确定 DFA 的可诊断性。
+
+References:
+1. [A polynomial Algorithm for Testing Diagnosability of Discrete-Event System](https://ieeexplore.ieee.org/document/940942)
 
 #### 2. 产生的日志冲突问题如何解决
 

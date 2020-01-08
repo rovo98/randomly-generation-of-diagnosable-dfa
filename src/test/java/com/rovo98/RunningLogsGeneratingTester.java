@@ -10,8 +10,7 @@ public class RunningLogsGeneratingTester {
         DFAConstructor dfaConstructor = new SimpleDFAConstructor();
         RunningLogsGenerator.generate(
                 50,
-                dfaConstructor,
-                50, 100,
-                false);
+                dfaConstructor.constructRandomDFA(50, 100),
+                dfaConstructor.getDFAConfig());
     }
 }

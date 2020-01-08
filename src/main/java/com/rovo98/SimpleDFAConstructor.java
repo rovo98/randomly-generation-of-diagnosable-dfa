@@ -1,12 +1,13 @@
 package com.rovo98;
 
+import com.rovo98.utils.CommonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 /**
- * Naive implementation of interface {@code DFAConstructor} with randomization.
+ * Naive implementation of interface {@link DFAConstructor} with randomization.
  *
  * More details are documented in README.md file. see first section.
  *
@@ -18,11 +19,11 @@ public class SimpleDFAConstructor implements DFAConstructor {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(SimpleDFAConstructor.class);
 
-    private Config config; // configuration for this DFA constructor.
+    private DFAConfig dfaConfig; // configuration for this DFA constructor.
 
     // default constructor.
     public SimpleDFAConstructor() {
-        this.config = new Config();
+        this.dfaConfig = new DFAConfig();
     }
 
     /**
@@ -32,83 +33,89 @@ public class SimpleDFAConstructor implements DFAConstructor {
      * @param maxXSize minimum number of the states
      */
     private void initialization(int minXSize, int maxXSize) {
+        // TODO: current implementation is less elegant. code refactoring is needed.
         Random r = new Random();
-        config.stateSize = r.nextInt((maxXSize - minXSize) + 1) + minXSize;
-        config.faultyStateSize = config.stateSize / 10;
+        dfaConfig.stateSize = r.nextInt((maxXSize - minXSize) + 1) + minXSize;
+        dfaConfig.faultyStateSize = Math.max(dfaConfig.stateSize / 10, 4);
 
         LOGGER.debug("Generated overall state size and faulty state size: {}, {}",
-                config.stateSize, config.faultyStateSize);
+                dfaConfig.stateSize, dfaConfig.faultyStateSize);
 
-        config.states = new int[config.stateSize];
-        for (int i = 0; i < config.stateSize; i++) {
-            config.states[i] = i;
+        dfaConfig.states = new int[dfaConfig.stateSize];
+        for (int i = 0; i < dfaConfig.stateSize; i++) {
+            dfaConfig.states[i] = i;
         }
         // alphabet size: range[10 ~ 20]
-        int alphabetSize = r.nextInt(11) + 10;
-        config.alphabet = new char[alphabetSize];
+        // FIXME: using dynamic design rather than fixed randomization.
+        int base = dfaConfig.stateSize > 20 ? 10 : 6;
+        int alphabetSize = r.nextInt(11) + base;
+        dfaConfig.alphabet = new char[alphabetSize];
 
         LOGGER.debug("Chosen alphabet size is {}", alphabetSize);
 
         // randomly fill the alphabet
-        int alphabetSpaceLen = config.alphabetSpace.length();
+        int alphabetSpaceLen = dfaConfig.alphabetSpace.length();
         boolean[] tempFlags = new boolean[alphabetSpaceLen];
         int tempIndex;
-        for (int i = 0; i < config.alphabet.length; i++) {
+        for (int i = 0; i < dfaConfig.alphabet.length; i++) {
             tempIndex = r.nextInt(alphabetSpaceLen);
             while (tempFlags[tempIndex]) {
                 tempIndex = r.nextInt(alphabetSpaceLen);
             }
             tempFlags[tempIndex] = true;
-            config.alphabet[i] = config.alphabetSpace.charAt(tempIndex);
+            dfaConfig.alphabet[i] = dfaConfig.alphabetSpace.charAt(tempIndex);
         }
-        // faulty event size (make sure less than a half of alphabet size)
-        // 4 ~ 6
-        int faultSize = config.stateSize / 10;
-        faultSize = faultSize > 5 ? 4 : faultSize;
-        if (alphabetSize > 15 && (config.faultyStateSize / faultSize) > 3) {
-            faultSize = faultSize + r.nextInt(2) + 1;
+        // faulty event size (make sure it less than a half of alphabet size)
+        int faultEventSize = Math.max(dfaConfig.faultyStateSize / 2, 2);
+        faultEventSize = faultEventSize >= 5 ? 4 : faultEventSize;
+        if (alphabetSize > 15 && (dfaConfig.faultyStateSize / faultEventSize) > 3) {
+            faultEventSize = faultEventSize + r.nextInt(2) + 1;
         }
-        config.faultyEvents = new int[faultSize];
+        dfaConfig.faultyEvents = new int[faultEventSize];
 
-        LOGGER.debug("Chosen faulty event size: {}", faultSize);
+        LOGGER.debug("Chosen faulty event size: {}", faultEventSize);
 
         boolean[] chosenFaultMarks = new boolean[alphabetSize];
         int choose;
-        for (int i = 0; i < faultSize; i++) {
+        for (int i = 0; i < faultEventSize; i++) {
             choose = r.nextInt(alphabetSize);
             while (chosenFaultMarks[choose])
                 choose = r.nextInt(alphabetSize);
             chosenFaultMarks[choose] = true;
-            config.faultyEvents[i] = choose;
+            dfaConfig.faultyEvents[i] = choose;
         }
 
-        LOGGER.debug("Generated alphabet set: {}", Arrays.toString(config.alphabet));
-        LOGGER.debug("Faulty events (index): {}", Arrays.toString(config.faultyEvents));
+        LOGGER.debug("Generated alphabet set: {}", Arrays.toString(dfaConfig.alphabet));
+        LOGGER.debug("Faulty events (index): {}", Arrays.toString(dfaConfig.faultyEvents));
 
         Set<Integer> faultyEventIndexSet = new HashSet<>();
-        for (int fi : config.faultyEvents)
+        for (int fi : dfaConfig.faultyEvents)
             faultyEventIndexSet.add(fi);
 
         int ui = 0;
         int oi = 0;
-        config.observableEvents = new char[alphabetSize - faultSize];
-        config.unobservableEvents = new char[faultSize];
+        dfaConfig.observableEvents = new char[alphabetSize - faultEventSize];
+        dfaConfig.unobservableEvents = new char[faultEventSize];
         for (int i = 0; i < alphabetSize; i++) {
             if (faultyEventIndexSet.contains(i))
-                config.unobservableEvents[ui++] = config.alphabet[i];
+                dfaConfig.unobservableEvents[ui++] = dfaConfig.alphabet[i];
             else
-                config.observableEvents[oi++] = config.alphabet[i];
+                dfaConfig.observableEvents[oi++] = dfaConfig.alphabet[i];
         }
-        LOGGER.debug("selected observable events : {}", Arrays.toString(config.observableEvents));
-        LOGGER.debug("selected unobservable events : {}", Arrays.toString(config.unobservableEvents));
+        LOGGER.debug("selected observable events : {}", Arrays.toString(dfaConfig.observableEvents));
+        LOGGER.debug("selected unobservable events : {}", Arrays.toString(dfaConfig.unobservableEvents));
     }
 
     @Override
     public DFANode constructRandomDFA(int minXNum, int maxXNum) {
+        return this.constructRandomDFA(minXNum, maxXNum, false);
+    }
+    public DFANode constructRandomDFA(int minXNum, int maxXNum, boolean saveConfig) {
         // TODO: range checking may be needed or refactoring
-        if (minXNum < 50 || maxXNum > 200) {
-            throw new IllegalArgumentException("Given minXNum should be >= 50, maxXNum should be <= 500");
-        }
+        if (minXNum <= 10)
+            throw new IllegalArgumentException("Given minXNum should be larger than 10.");
+        if (minXNum >= maxXNum)
+            throw new IllegalArgumentException("maxXNum must greater than minXNum!");
         LOGGER.info("Do preparation before constructing the DFA...");
         initialization(minXNum, maxXNum);
         LOGGER.info("Preparation done.");
@@ -116,40 +123,49 @@ public class SimpleDFAConstructor implements DFAConstructor {
         // divides states into normal set and faulty set.
         LOGGER.info("Constructing directed graph components...");
         LOGGER.debug("====>\t Dividing states set....");
-        int normalStateRange = config.stateSize - config.faultyStateSize;
+        int normalStateRange = dfaConfig.stateSize - dfaConfig.faultyStateSize;
 
         LOGGER.debug("Divided normal states set : [{}:{})", 0, normalStateRange);
 
         DFANode normalComponent = constructGraphComponent(0, normalStateRange);
         LOGGER.debug("====>\t normal component constructed.");
-        DFANode[] faultyComponents = new DFANode[config.faultyEvents.length];
+        DFANode[] faultyComponents = new DFANode[dfaConfig.faultyEvents.length];
 
-        int steps = config.faultyStateSize / config.faultyEvents.length;
+        int steps = dfaConfig.faultyStateSize / dfaConfig.faultyEvents.length;
         int faultyStart = normalStateRange;
         int faultyEnd = faultyStart + steps;
-        for (int i = 0; i < config.faultyEvents.length; i++) {
+        for (int i = 0; i < dfaConfig.faultyEvents.length; i++) {
             LOGGER.debug("Divided fault set {}, range: [{}:{})", i, faultyStart, faultyEnd);
             faultyComponents[i] = constructGraphComponent(faultyStart, faultyEnd);
             LOGGER.debug("====>\t faulty component_" + i + " constructed.");
             faultyStart = faultyEnd;
             faultyEnd = faultyEnd + steps;
-            if (config.stateSize - faultyEnd < steps)
-                faultyEnd = config.stateSize;
+            if (dfaConfig.stateSize - faultyEnd < steps)
+                faultyEnd = dfaConfig.stateSize;
         }
         // connecting normalComponent with other faulty components.
         LOGGER.debug("Composing all the components...");
-        int faultySize = config.faultyEvents.length;
+        int faultySize = dfaConfig.faultyEvents.length;
         for (DFANode component : faultyComponents)
+            // FIXME: current implementation: faulty type assignment is reversed for the given faulty events.
+            // natural order may be more adaptive.
             connectingDFAComponent(normalComponent, component, --faultySize);
 
         LOGGER.info("DFA constructed.");
+
+        if (saveConfig) {
+            String filename = CommonUtils.generateDefaultDFAName(dfaConfig);
+            filename = filename.concat("_config");
+            CommonUtils.saveDFAConfigs(filename, normalComponent, dfaConfig);
+        }
+
         return normalComponent;
     }
 
     /*
-    ===================
-    HELPER FUNCTIONS
-    ===================
+    =======================
+        HELPER FUNCTIONS
+    =======================
      */
 
     /**
@@ -164,15 +180,15 @@ public class SimpleDFAConstructor implements DFAConstructor {
         // TODO: index range validation may needed.
         int size = end - start;
         int steps = 0;
-        boolean[] visited = new boolean[config.stateSize];
-        DFANode root = new DFANode(config.states[start]);
-        config.statesMap.put(config.states[start], root);
+        boolean[] visited = new boolean[dfaConfig.stateSize];
+        DFANode root = new DFANode(dfaConfig.states[start]);
+        dfaConfig.statesMap.put(dfaConfig.states[start], root);
 
         visited[start] = true;
         steps++;
 
         // tracking unvisited states.
-        int[] unvisitedStates = Arrays.copyOfRange(config.states, start + 1, end);
+        int[] unvisitedStates = Arrays.copyOfRange(dfaConfig.states, start + 1, end);
         List<Integer> unvisitedList = new ArrayList<>();
         for (int state : unvisitedStates)
             unvisitedList.add(state);
@@ -184,9 +200,9 @@ public class SimpleDFAConstructor implements DFAConstructor {
             int nextXIndex = r.nextInt(unvisitedList.size());
             int nextState = unvisitedList.get(nextXIndex);
             // add new state to Config.statesMap.
-            if (!config.statesMap.containsKey(nextState)) {
+            if (!dfaConfig.statesMap.containsKey(nextState)) {
                 DFANode nextNode = new DFANode(nextState);
-                config.statesMap.put(nextState, nextNode);
+                dfaConfig.statesMap.put(nextState, nextNode);
             }
             addRandomTransition(pNode, nextState);
             // for every node, attaching it with 2 ~ 4 nodes.
@@ -196,18 +212,18 @@ public class SimpleDFAConstructor implements DFAConstructor {
             for (int i = 0; i < connections; i++) {
                 // randomly choose one state (can be visited, btw, itself is adapted)
                 int ns = r.nextInt(size) + start;
-                if (!config.statesMap.containsKey(config.states[ns])) {
-                    DFANode newNode = new DFANode(config.states[ns]);
-                    config.statesMap.put(config.states[ns], newNode);
+                if (!dfaConfig.statesMap.containsKey(dfaConfig.states[ns])) {
+                    DFANode newNode = new DFANode(dfaConfig.states[ns]);
+                    dfaConfig.statesMap.put(dfaConfig.states[ns], newNode);
                 }
-                addRandomTransition(pNode, config.states[ns]);
+                addRandomTransition(pNode, dfaConfig.states[ns]);
             }
 
             // navigating to one unvisited node.
             Character[] unvisitedTransitionSymbols = getUnvisitedTransitionSymbols(pNode, visited);
 
             int navigatingSymbolIndex = r.nextInt(unvisitedTransitionSymbols.length);
-            pNode = pNode.navigate(unvisitedTransitionSymbols[navigatingSymbolIndex], config);
+            pNode = pNode.navigate(unvisitedTransitionSymbols[navigatingSymbolIndex], dfaConfig);
 
             // mark new income state as visited.
             if (!visited[pNode.state]) {
@@ -220,7 +236,7 @@ public class SimpleDFAConstructor implements DFAConstructor {
                 int c = r.nextInt(2) + 1;
                 for (int i = 0; i < c; i++) {
                     int ns = r.nextInt(size) + start;
-                    addRandomTransition(pNode, config.states[ns]);
+                    addRandomTransition(pNode, dfaConfig.states[ns]);
                 }
             }
         }
@@ -240,11 +256,11 @@ public class SimpleDFAConstructor implements DFAConstructor {
         // randomly choose a symbol from observable events set \ transition events.
         // Choose a symbol (event) not in transition table of current node already.
         Random r = new Random();
-        int observableEventSize = config.observableEvents.length;
+        int observableEventSize = dfaConfig.observableEvents.length;
 
         Character[] obs = new Character[observableEventSize];
         for (int i = 0; i < observableEventSize; i++)
-            obs[i] = config.observableEvents[i];
+            obs[i] = dfaConfig.observableEvents[i];
 
         Character[] unattachedSymbols = Arrays.stream(obs)
                 .filter(s -> {
@@ -275,25 +291,28 @@ public class SimpleDFAConstructor implements DFAConstructor {
         // traverses several steps, and then adding the faulty transition
         // to the node which we stop at.
         Random r = new Random();
-        int rt = r.nextInt(41) + 10; // 10 ~ 50
+        // FIXME: randomization bound should be a dynamic design here.
+        int bound = dfaConfig.stateSize > 20 ? 31 : 21;
+        int rt = r.nextInt(bound) + 10; // 10 ~ 30 or 10 ~ 40
         while (rt > 0) {
             // filtering the unobservable events
             Character[] symbols = pNode.transitions.keySet().stream()
                     .filter(s -> {
-                        for (char c : config.unobservableEvents)
+                        for (char c : dfaConfig.unobservableEvents)
                             if (c == s) return false;
                         return true;
                     }).toArray(Character[]::new);
             char symbol = symbols[r.nextInt(symbols.length)];
-            pNode = pNode.navigate(symbol, config);
+            pNode = pNode.navigate(symbol, dfaConfig);
             rt--;
         }
-        pNode.addTransition(config.unobservableEvents[faultyMode], faultyState);
+        pNode.addTransition(dfaConfig.unobservableEvents[faultyMode], faultyState);
     }
 
     // getter.
-    public Config getConfig() {
-        return config;
+    @Override
+    public DFAConfig getDFAConfig() {
+        return dfaConfig;
     }
 
     /**
@@ -303,8 +322,6 @@ public class SimpleDFAConstructor implements DFAConstructor {
      */
     public static void main(String[] args) {
         SimpleDFAConstructor constructor = new SimpleDFAConstructor();
-        constructor.constructRandomDFA(50, 100);
-
-        System.out.println(constructor.config.statesMap.get(0).state);
+        constructor.constructRandomDFA(11, 20, true);
     }
 }

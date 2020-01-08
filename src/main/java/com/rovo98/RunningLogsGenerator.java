@@ -1,6 +1,6 @@
 package com.rovo98;
 
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import com.rovo98.utils.CommonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,8 +11,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Random;
+import java.util.Set;
 
 /**
  * Utils for generating running logs using the given DFA.
@@ -71,22 +73,31 @@ public class RunningLogsGenerator {
     /**
      * Generates running logs of the given {@code dfa}
      *
+     * @param logSize   the number of the running logs to be generated.
+     * @param dfaRoot   the root node of the constructed dfa.
+     * @param dfaConfig configuration of the constructed dfa.
+     */
+    public static void generate(int logSize, DFANode dfaRoot, DFAConfig dfaConfig) {
+        generate(logSize, dfaRoot, dfaConfig, false);
+    }
+
+    /**
+     * Generates running logs of the given {@code dfa}
+     *
      * @param logSize    the number of the running logs to be generated.
-     * @param dfa        A DFA constructor instance.
-     * @param minXNum    the minimum number of the states in dfa to constructed.
-     * @param maxXNum    the maximum number of the states in dfa to constructed.
+     * @param dfaRoot    the root node of the constructed dfa.
+     * @param dfaConfig  configuration of the constructed dfa.
      * @param saveToFile whether to save the generated logs to file.
      */
-    public static void generate(int logSize, DFAConstructor dfa, int minXNum, int maxXNum, boolean saveToFile) {
+    public static void generate(int logSize, DFANode dfaRoot, DFAConfig dfaConfig, boolean saveToFile) {
         // TODO: dfa validation may be needed, dfa should be constructed and Config should well prepared.
-
-        // constructing the dfa first (initialize the configuration of the dfa constructor).
-        DFANode dfaRoot = dfa.constructRandomDFA(minXNum, maxXNum);
-        Config dfaConfig = dfa.getConfig();
         // FIXME: code refactoring is needed here, the constructed dfa should be diagnosable before
         // using it to generate logs.
 
-        LOGGER.info("Generating running logs..., size: {}", logSize);
+        // basic checking
+        if (minSteps >= maxSteps)
+            throw new IllegalArgumentException("Given minSteps and maxSteps is invalided!");
+        LOGGER.info("Generating running logs..., size: {}, steps range: [{}, {}]", logSize, minSteps, maxSteps);
 
         runningLogs = new HashSet<>(logSize);
         statistics = new int[dfaConfig.faultyEvents.length + 1];
@@ -109,16 +120,12 @@ public class RunningLogsGenerator {
 
         // Saving the logs to file.
         if (saveToFile) {
-            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String basicInfo = "s" + dfaConfig.stateSize + ":fs" + dfaConfig.faultyStateSize +
-                    ":as" + dfaConfig.alphabet.length + ":fes" + dfaConfig.faultyEvents.length;
-            String filename = Base64.encode(basicInfo.getBytes());
-            filename = df.format(new Date()).concat("_").concat(filename).concat("_running-logs.txt");
+            String filename = CommonUtils.generateDefaultDFAName(dfaConfig).concat("_running-logs.txt");
             save(filename, dfaConfig);
         }
     }
 
-    private static String attachingLabel(StringBuilder log, Config dfaConfig) {
+    private static String attachingLabel(StringBuilder log, DFAConfig dfaConfig) {
         for (int i = 0; i < dfaConfig.unobservableEvents.length; i++) {
             if (log.toString().indexOf(dfaConfig.unobservableEvents[i]) >= 0) {
                 log = new StringBuilder(log.toString()
@@ -136,7 +143,7 @@ public class RunningLogsGenerator {
         return log.toString();
     }
 
-    private static String containsVisitedTraversal(int stopSteps, DFANode root, Config dfaConfig) {
+    private static String containsVisitedTraversal(int stopSteps, DFANode root, DFAConfig dfaConfig) {
         if (showGeneratedLogs)
             LOGGER.debug("constructing a log using visited approach, expected len->{}", stopSteps);
         DFANode pNode = root;
@@ -164,14 +171,14 @@ public class RunningLogsGenerator {
      *
      * @param filename the name of the file to save logs.
      */
-    private static void save(String filename, Config dfaConfig) {
+    private static void save(String filename, DFAConfig dfaConfig) {
 
         LOGGER.info("Saving the generated logs to file : {}", filename);
         // loads storage location config.
         Properties config = new Properties();
         try {
             config.load(RunningLogsGenerator.class.getClassLoader()
-                    .getResourceAsStream("GeneratorConfig.properties"));
+                    .getResourceAsStream("AppConfigs.properties"));
             String location = config.getProperty("logs.storageLocation");
 
 
@@ -217,13 +224,13 @@ public class RunningLogsGenerator {
      * @param args command-line arguments.
      */
     public static void main(String[] args) {
-        RunningLogsGenerator.setVerbose(true);
+        RunningLogsGenerator.setVerbose(false);
         RunningLogsGenerator.setMinSteps(50);
         RunningLogsGenerator.setMaxSteps(100);
+        DFAConstructor constructor = new SimpleDFAConstructor();
         RunningLogsGenerator.generate(
                 1_00,
-                new SimpleDFAConstructor(),
-                50, 100,
-                false);
+                constructor.constructRandomDFA(50, 100),
+                constructor.getDFAConfig());
     }
 }
