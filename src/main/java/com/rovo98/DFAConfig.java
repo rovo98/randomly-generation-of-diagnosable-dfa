@@ -6,8 +6,9 @@ import java.util.Map;
 
 /**
  * Configurations for constructing random DFA and generating running logs.
- *
- * This configuration is a part of DFA constructor. also used by generator.
+ * <br/>
+ * This configuration is a part of DFA constructor, e.g. {@link SimpleDFAConstructor}.<br />
+ * also used by log generator. see {@link RunningLogsGenerator}.
  *
  * @author rovo98
  * @version 1.0.0

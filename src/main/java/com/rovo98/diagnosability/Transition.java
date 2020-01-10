@@ -3,7 +3,9 @@ package com.rovo98.diagnosability;
 import java.util.Objects;
 
 /**
- * Representation for transition in observer and composited automata.
+ * Representation for transition in observer and composited finite automata.
+ * <br/>
+ * Used by {@link NDDFANode} and {@link CompositeNode}.
  *
  * @author rovo98
  * @version 1.0.0

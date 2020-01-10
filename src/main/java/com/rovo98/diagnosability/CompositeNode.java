@@ -6,9 +6,12 @@ import java.util.List;
 /**
  * Definition of the composited node via a composition using a observer and itself.
  * -> Observer node representation, see {@link NDDFANode}.
- *
- * More details, see jiang's paper - A Polynomial Algorithm for Testing Diagnosability of Discrete-Event Systems.
- *
+ * <br />
+ * <br />
+ * More details, see jiang's paper - <a href="https://ieeexplore.ieee.org/document/940942">
+ *     A Polynomial Algorithm for Testing Diagnosability of Discrete-Event Systems</a>}
+ * <br />
+ * REMARK: Single faulty mode is only considered.
  * @author rovo98
  * @version 1.0.0
  * @since 2019.12.27

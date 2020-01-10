@@ -4,24 +4,32 @@ import com.rovo98.DFAConfig;
 import com.rovo98.DFANode;
 import com.rovo98.exceptions.TransitionNotFound;
 import com.rovo98.utils.CommonUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Naive implementation of the neotype diagnoser proposed by jiang in his paper
+ * Naive implementation of the Diagnosability of DES Testing approach proposed by jiang in his paper
  * 'A Polynomial Algorithm for Testing Diagnosability of Discrete-Event Systems.
- *
+ * <br />
+ * <br />
  * Compared to traditional method {@link TraditionalDiagnoser}, this approach tests the diagnosabilty of the given dfa
  * without constructing a diagnoser.
- *
- * More details, see jiang's paper - A Polynomial Algorithm for Testing Diagnosability of Discrete-Event Systems.
+ * <br />
+ * <br />
+ * More details, see jiang's paper - <a href="https://ieeexplore.ieee.org/document/940942">
+ * A Polynomial Algorithm for Testing Diagnosability of Discrete-Event Systems</a>}
+ * <br />
  *
  * @author rovo98
  * @version 1.0.0
  * @since 2019.12.27
  */
 public class NeotypeDiagnoser implements Diagnoser {
+
+    public static final Logger LOGGER = LoggerFactory.getLogger(NeotypeDiagnoser.class);
     // stores all observer nodes for checking diagnosability
     // using observer node's identical key as key.
     private Map<String, NDDFANode> ndDfaNodeMap;
@@ -29,10 +37,25 @@ public class NeotypeDiagnoser implements Diagnoser {
     // using composite node's identical key as key.
     private Map<String, CompositeNode> compositeNodeMap;
 
-    // initialization.
-    public NeotypeDiagnoser() {
+    // this class can not be instanced outside this class.
+    private NeotypeDiagnoser() {
+        // initialization.
         this.ndDfaNodeMap = new HashMap<>();
         this.compositeNodeMap = new HashMap<>();
+    }
+
+    // singleton wrapper.
+    private static class SingletonWrapper {
+        private static final Diagnoser INSTANCE = new NeotypeDiagnoser();
+    }
+
+    /**
+     * Returns the singleton instance of the NeotypeDiagnoser.
+     *
+     * @return the singleton instance of the {@code NeotypeDiagnoser}.
+     */
+    public static Diagnoser getInstance() {
+        return SingletonWrapper.INSTANCE;
     }
 
     @Override
@@ -48,22 +71,34 @@ public class NeotypeDiagnoser implements Diagnoser {
         this.computeComposition(observerRoot);
         // 3. cycle checking to see whether the given dfa is diagnosable or not.
         List<CompositeNode> targets = compositeNodeMap.values().stream()
-                .filter(cn -> cn.firstState != cn.secondState ||
-                        !cn.firstFailureType.equals(cn.secondFailureType))
+                .filter(cn -> !cn.firstFailureType.equals(cn.secondFailureType))
                 .collect(Collectors.toList());
-        // for debug print only.
+        // modification of the algorithm for detecting cycle in directed graph.
+        Set<String> visitedKeys = new HashSet<>(compositeNodeMap.size());
+        Set<String> recStack = new HashSet<>(compositeNodeMap.size());
+        // for debug usage only.
+        System.out.println("=======================================================\n");
+        System.out.println("\t\tDEBUG usage only... (Cycle Testing)");
         for (CompositeNode cn : targets) {
+            // reset visited and recursion stack for every node checking.
+            visitedKeys.clear();
+            recStack.clear();
+
             System.out.print(cn.firstState + "," + cn.firstFailureType + ":" + cn.secondState + "," +
                     cn.secondFailureType);
-            if (existCycle(cn))
-                System.out.println(": false.");
+            if (existCycle(cn, cn, visitedKeys, recStack))
+                System.out.println(": existed.\n");
             else
-                System.out.println(": true.");
+                System.out.println(": not existed.\n");
         }
+        System.out.println("=======================================================\n");
         for (CompositeNode cn : targets) {
-            if (existCycle(cn))
+            if (existCycle(cn, cn, visitedKeys, recStack)) {
+                LOGGER.debug("Current dfa is not diagnosable!");
                 return false;
+            }
         }
+        LOGGER.debug("Current dfa is diagnosable!");
         return true;
     }
 
@@ -73,23 +108,33 @@ public class NeotypeDiagnoser implements Diagnoser {
     =========================
      */
     // return true if there exists a cycle starting from the given node.
-    private boolean existCycle(CompositeNode node) {
-        // depth-first search approach is used.
-        Deque<String> stack = node.getTransitions().stream()
-                .map(t -> t.nextKey)
-                .distinct()
-                .collect(Collectors.toCollection(ArrayDeque::new));
-
-        while (!stack.isEmpty()) {
-            CompositeNode nextCNode = compositeNodeMap.get(stack.pop());
-            if (isSameState(node, nextCNode))
+    private boolean existCycle(CompositeNode root, CompositeNode node,
+                               Set<String> visitedKeys, Set<String> recStack) {
+        // mark the current node as visited and part of the recursion stack.
+        if (recStack.contains(CommonUtils.getCompositeNodeIdenticalKey(node))) {
+            // if the node the back edge navigating to is the root node.
+            // there exists a cycle starting from the given root node
+            // and back to the root node.
+            // print, for debug usage only.
+            System.out.println("\n" + CommonUtils.getCompositeNodeIdenticalKey(root) + ":" +
+                    CommonUtils.getCompositeNodeIdenticalKey(node));
+            if (isSameState(root, node))
                 return true;
-            // add next node's transitions except one to itself (self-ring is excepted).
-            stack.addAll(nextCNode.getTransitions().stream()
-                    .filter(t -> !t.nextKey.equals(CommonUtils.getCompositeNodeIdenticalKey(nextCNode)))
-                    .map(t -> t.nextKey)
-                    .collect(Collectors.toList()));
         }
+        if (visitedKeys.contains(CommonUtils.getCompositeNodeIdenticalKey(node)))
+            return false;
+
+        visitedKeys.add(CommonUtils.getCompositeNodeIdenticalKey(node));
+        recStack.add(CommonUtils.getCompositeNodeIdenticalKey(node));
+
+        List<CompositeNode> children = node.getTransitions().stream()
+                .map(t -> compositeNodeMap.get(t.nextKey))
+                .collect(Collectors.toList());
+        for (CompositeNode n : children)
+            if (existCycle(root, n, visitedKeys, recStack))
+                return true;
+
+        recStack.remove(CommonUtils.getCompositeNodeIdenticalKey(node));
         return false;
     }
 
@@ -109,7 +154,8 @@ public class NeotypeDiagnoser implements Diagnoser {
             failureTypes[i] = "F" + i;
 
         //states whether the observer node is visited or not.
-        boolean[] visited = new boolean[dfaConfig.getStateSize()];
+        int visitedStateSize = dfaConfig.getStateSize() * 2; // allocating a bit more space.
+        boolean[] visited = new boolean[visitedStateSize];
         int visitedCount = dfaConfig.getStateSize();
 
         NDDFANode observerRoot = new NDDFANode(root.getState(), failureTypes[0]);
@@ -284,16 +330,18 @@ public class NeotypeDiagnoser implements Diagnoser {
     public static void main(String[] args) {
 //        Optional<Object[]> loaded = CommonUtils
 //                .loadDFAConfigs("2020-01-06 10:48:57_czEzOmZzNDphczc6ZmVzMg==_config");
-//        Optional<Object[]> loaded = CommonUtils
-//                .loadDFAConfigs("2020-01-06 10:47:30_czE2OmZzNDphczg6ZmVzMg==_config");
         Optional<Object[]> loaded = CommonUtils
-                .loadDFAConfigs("2020-01-06 10:48:17_czE4OmZzNDphczE0OmZlczI=_config");
+                .loadDFAConfigs("2020-01-06 10:47:30_czE2OmZzNDphczg6ZmVzMg==_config");
+//        Optional<Object[]> loaded = CommonUtils
+//                .loadDFAConfigs("2020-01-06 10:48:17_czE4OmZzNDphczE0OmZlczI=_config");
+//        Optional<Object[]> loaded = CommonUtils
+//                .loadDFAConfigs("2020-01-09 22:54:38_czE4OmZzNDphczE2OmZlczI=_config");
         if (loaded.isPresent()) {
             Object[] res = loaded.get();
 
             DFANode testRootNode = (DFANode) res[0];
             DFAConfig testDfaConfig = (DFAConfig) res[1];
-            Diagnoser dfaDiagnoser = new NeotypeDiagnoser();
+            Diagnoser dfaDiagnoser = NeotypeDiagnoser.getInstance();
             System.out.println("is diagnosable? -> " + dfaDiagnoser.isDiagnosable(testRootNode, testDfaConfig));
         }
     }

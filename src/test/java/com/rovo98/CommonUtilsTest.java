@@ -18,38 +18,37 @@ public class CommonUtilsTest {
 
         Optional<Object[]> res = CommonUtils.loadDFAConfigs("testfile.dat");
 
-        if (res.isPresent()) {
-            Object[] result = res.get();
-            System.out.println(Arrays.toString(result));
-            DFANode readDfaNode = (DFANode) result[0];
-            DFAConfig readDfaDFAConfig = (DFAConfig) result[1];
-            System.out.println(readDfaNode.state);
-            System.out.println(readDfaDFAConfig.stateSize);
-        }
+        Assertions.assertTrue(res.isPresent());
+        Object[] result = res.get();
+        Assertions.assertNotNull(result);
+
+        System.out.println(Arrays.toString(result));
+        DFANode readDfaNode = (DFANode) result[0];
+        DFAConfig readDfaDFAConfig = (DFAConfig) result[1];
+        System.out.println(readDfaNode.state);
+        System.out.println(readDfaDFAConfig.stateSize);
     }
 
     @Test
     void testLoadingDfaConfigs() {
+        // Only using diagnosable DFA to generate logs make sense.
 //        Optional<Object[]> result = CommonUtils.loadDFAConfigs(
-//                "2020-01-06 10:47:30_czE2OmZzNDphczg6ZmVzMg==_config");
+//                "2020-01-06 10:48:17_czE4OmZzNDphczE0OmZlczI=_config");
+
         Optional<Object[]> result = CommonUtils.loadDFAConfigs(
-                "2020-01-06 10:48:17_czE4OmZzNDphczE0OmZlczI=_config");
-//        Optional<Object[]> result = CommonUtils.loadDFAConfigs(
-//                "2020-01-06 10:48:57_czEzOmZzNDphczc6ZmVzMg==_config");
+                "2020-01-09 22:54:38_czE4OmZzNDphczE2OmZlczI=_config");
         Assertions.assertTrue(result.isPresent());
         Object[] res = result.get();
         DFANode root = (DFANode) res[0];
         DFAConfig dfaConfig = (DFAConfig) res[1];
 
-        System.out.println(root);
-        System.out.println(dfaConfig);
-
-        System.out.println(dfaConfig.statesMap);
+        Assertions.assertNotNull(root);
+        Assertions.assertNotNull(dfaConfig);
 
         CommonUtils.printDfaConfigs(dfaConfig);
-        RunningLogsGenerator.setVerbose(true);
+        RunningLogsGenerator.setVerbose(false);
         RunningLogsGenerator.setMinSteps(10);
-        RunningLogsGenerator.setMaxSteps(15);
-        RunningLogsGenerator.generate(10, root, dfaConfig);
+        RunningLogsGenerator.setMaxSteps(40);
+        RunningLogsGenerator.generate(100_000, root, dfaConfig, true);
     }
 }

@@ -11,15 +11,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
-import java.util.Set;
 
 /**
  * Utils for generating running logs using the given DFA.
- *
- * - Generating logs, and then save the logs to specified locations (or a fix location).
+ * <br />
+ * Generating logs, and then save the logs to the specified location (or a fixed location).
+ * <br />
+ * Storage location can be specified in AppConfigs.properties file in the classpath.
  *
  * @author rovo98
  * @version 1.0.0
@@ -29,16 +31,18 @@ public class RunningLogsGenerator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RunningLogsGenerator.class);
 
-    private static Set<String> runningLogs;
+    private static Map<String, String> runningLogs;
 
     private static int[] statistics;
 
+    //Whether to show every generated logs as debug infos in console.
     private static boolean showGeneratedLogs = false;
 
-    private static int minSteps = 30;
+    private static int minSteps = 10;
     private static int maxSteps = 100;
 
-    //Whether to show every generated logs as debug infos in console.
+    // this class can not be instanced.
+    private RunningLogsGenerator() {}
 
     /**
      * settings control whether to print out the debug msg for every generated logs.
@@ -91,26 +95,27 @@ public class RunningLogsGenerator {
      */
     public static void generate(int logSize, DFANode dfaRoot, DFAConfig dfaConfig, boolean saveToFile) {
         // TODO: dfa validation may be needed, dfa should be constructed and Config should well prepared.
-        // FIXME: code refactoring is needed here, the constructed dfa should be diagnosable before
-        // using it to generate logs.
+        // FIXME: code refactoring may be needed here, the constructed dfa should be diagnosable before
 
         // basic checking
         if (minSteps >= maxSteps)
             throw new IllegalArgumentException("Given minSteps and maxSteps is invalided!");
         LOGGER.info("Generating running logs..., size: {}, steps range: [{}, {}]", logSize, minSteps, maxSteps);
 
-        runningLogs = new HashSet<>(logSize);
+        runningLogs = new HashMap<>(logSize);
         statistics = new int[dfaConfig.faultyEvents.length + 1];
 
         for (int i = 0; i < logSize; i++) {
             Random r = new Random();
-            runningLogs.add(containsVisitedTraversal(
-                    r.nextInt(maxSteps - minSteps + 1) + minSteps, dfaRoot, dfaConfig));
+            removeConflictedAdd(
+                    runningLogs,
+                    containsVisitedTraversal(r.nextInt(maxSteps - minSteps + 1) + minSteps,
+                            dfaRoot, dfaConfig));
         }
 
         // statistic infos
-        for (String l : runningLogs) {
-            int index = Integer.parseInt(String.valueOf(l.charAt(l.length() - 1)));
+        for (String k : runningLogs.keySet()) {
+            int index = Integer.parseInt(runningLogs.get(k));
             statistics[index]++;
         }
         LOGGER.info("Running logs generated.All (duplicates removed): {} Normal logs: {}",
@@ -123,6 +128,24 @@ public class RunningLogsGenerator {
             String filename = CommonUtils.generateDefaultDFAName(dfaConfig).concat("_running-logs.txt");
             save(filename, dfaConfig);
         }
+    }
+
+    // returns true if the logs already contains a log with the same observation
+    // to new come log.
+    private static void removeConflictedAdd(Map<String, String> logs, String newComeLog) {
+        // if logs set already contains the newComeLog.
+        String[] splitNewComeLog = newComeLog.split("T");
+        String newComeObservation = splitNewComeLog[0];
+        String newComeLabel = splitNewComeLog[1];
+        // ignoring added logs.
+        if (logs.containsKey(newComeObservation)) {
+            if (logs.get(newComeObservation).equals(newComeLabel)) return;
+            // remove the conflicted logs.
+            logs.remove(newComeObservation);
+        } else {
+            logs.put(newComeObservation, newComeLabel);
+        }
+
     }
 
     private static String attachingLabel(StringBuilder log, DFAConfig dfaConfig) {
@@ -202,11 +225,13 @@ public class RunningLogsGenerator {
             for (char c : dfaConfig.observableEvents)
                 obsInfo = obsInfo.concat(c + ",");
             obsInfo = obsInfo.substring(0, obsInfo.length() - 1).concat("]");
+            statisticInfo = statisticInfo.concat(",minLen:" + minSteps).concat(",maxLen:" + maxSteps);
             statisticInfo = statisticInfo.concat(" observable events:").concat(obsInfo);
             bfw.write(statisticInfo);
             bfw.newLine();
 
-            for (String log : runningLogs) {
+            for (String observation : runningLogs.keySet()) {
+                String log = observation.concat("T").concat(runningLogs.get(observation));
                 bfw.write(log);
                 bfw.newLine();
             }
@@ -224,13 +249,13 @@ public class RunningLogsGenerator {
      * @param args command-line arguments.
      */
     public static void main(String[] args) {
-        RunningLogsGenerator.setVerbose(false);
-        RunningLogsGenerator.setMinSteps(50);
-        RunningLogsGenerator.setMaxSteps(100);
-        DFAConstructor constructor = new SimpleDFAConstructor();
+        RunningLogsGenerator.setVerbose(true);
+        RunningLogsGenerator.setMinSteps(15);
+        RunningLogsGenerator.setMaxSteps(20);
+        DFAConstructor constructor = SimpleDFAConstructor.getInstance();
         RunningLogsGenerator.generate(
-                1_00,
-                constructor.constructRandomDFA(50, 100),
+                10,
+                constructor.constructRandomDFAWithDiagnosability(11, 20),
                 constructor.getDFAConfig());
     }
 }

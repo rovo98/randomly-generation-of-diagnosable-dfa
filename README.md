@@ -96,10 +96,10 @@ Issues: 如何确保在生成 running logs 时，每一种错误类型的观察�
 
 ![](./images/dfa-example_01_czE0OmZzNDphczk6ZmVzMg==_arch.jpg)
 ![](./images/dfa-example_02_czE2OmZzNDphczg6ZmVzMg==_arch.png)
-![](./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_arch.png)
+![](./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_01_arch.png)
 ![](./images/dfa-example_04_czE5OmZzNDphczE1OmZlczI=_arch.jpg)
 ![](./images/dfa-example_05_czE5OmZzNDphczEzOmZlczI=_arch.jpg)
-![](./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_arch.png)
+![](./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_01_arch.png)
 
 <del>### Remarks</del>
 
@@ -109,14 +109,63 @@ Issues: 如何确保在生成 running logs 时，每一种错误类型的观察�
 
 当前实现方案中，产生的 DFA，它的错误状态集比小，则当一个节点通过状态转换到达某个错误状态集组件中时，它后续进行的状态转换，产生的 observation 会有明显的规律。
 
+
+
+> TODO: 可为已构建的所有错误状态，再构建一个具有若干正常状态的组件，使全部错误状态组件有一个（或若干个）转换可以到达该正常组件，或使某些（随机数量）错误状态组件有一个（或若干个）转换到达该正常组件。
+>
+>REMARKS： 错误状态组件到该正常状态组件的转换是单向的，且进入正常状态组件后无法再跳转出去。
+
+fig example:
+![](./images/non-randomly-construction-of-dfas-with-faulty-events_with-extra-normal.png)
+
+- [x] Code implementation integration.
+
 #### 1. 可诊断性无法保证。需要利用 jiang 的多项式时间判断方法来确定 DFA 的可诊断性。
+
+- [x] Diagnosability Testing implementation.
+
 
 References:
 1. [A polynomial Algorithm for Testing Diagnosability of Discrete-Event System](https://ieeexplore.ieee.org/document/940942)
 
 #### 2. 产生的日志冲突问题如何解决
 
-#### 3. 当前的模型评估方式存在问题
+根据 sampath 'Diagnosability of Discrete-Event Systems' 提出的 **可诊断性** 的定义，在生成 DFA 满足可诊断性的情况下，生成的日志仍有可能出现冲突 (到达某一状态后，恰好发生错误转换后停止以及在该状态停止，其产生的两种类型的日志是冲突的 conflicted)。
+> 处理方式，我们可以直接丢弃冲突的日志，即生成的日志只要出现冲突，均丢弃。
 
-1. 只对生成的日志负责
-2. 需要构造 **诊断器** 来判断日志的真实类别 
+- [x] Code implementation to resolving conflict running logs.
+
+#### 3. 当前的模型评估方式
+
+1. [x] 只对生成的日志负责
+2. [ ] 需要构造 **诊断器** 来判断日志的真实类别 
+
+诊断器的构造参考 Introduction to DES 一书中提到的构造方式。
+
+## 2. Diagnosability testing
+
+根据  [A polynomial Algorithm for Testing Diagnosability of Discrete-Event System](https://ieeexplore.ieee.org/document/940942) 中算法，对生成的 dfa 进行可诊断性测试。
+> 详细算法细节见 paper.
+
+#### example 1
+
+1. 通过上面方式生成的 DFA。
+![](./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_01_arch.png)
+2. 获得 DFA 的一个 nondeterministic finite state machine $G_o$
+![](./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_02_nd-observer.png)
+3. 计算上面获得 $G_o$ 和其自身的 Composition 组合 (在该情况下，实际上是 product $X$ 操作, 因为两个 $G_o$ 拥有相同的事件集)，看是否存在标签不一致的状态是否存在回路 (cycle, 环)来判断该 DFA 是否具备 diagnosability.
+![](./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_03_composition.png)
+4. 对于所有具有不同状态标签的组合节点，判断是否存在一个回路 cycle / 环回到它自身。
+> 该 DFA 不可诊断。
+
+
+#### example 2
+
+1. generated DFA.
+![](./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_01_arch.png)
+2. Obtains a nondeterministic finite machine of the given DFA.
+![](./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_02_nd-observer.png)
+3. Computes the product composition of the two same nd-observer got above.
+![](./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_03_composition.png)
+4. Checking whether there exists a cycle starting from nodes whose state has different labels.
+> 该 DFA 具备可诊断性。

@@ -8,10 +8,10 @@ import java.util.Map;
 
 /**
  * Complete Deterministic Finite Automata node representation.
- *
- * For simplicity, Do not use generic type
- * 1. using primitive type int as state type.
- * 2. Character type as symbol's type.
+ * <br />
+ * For simplicity, Do not use generic type<br/>
+ * &nbsp;&nbsp;1. using primitive type int as state type.<br/>
+ * &nbsp;&nbsp;2. Character type as symbol's type.<br/>
  *
  * @author rovo98
  * @version 1.0.0

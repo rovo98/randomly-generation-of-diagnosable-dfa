@@ -5,11 +5,16 @@ import java.util.List;
 
 /**
  * Definition of nondeterministic dfa node for testing diagnosability using jiang's method.
- *
+ * <br />
+ * <br />
  * simple representation of graph node in a observer obtained from the given G (N-DFA)
+ * <br />
+ * <br />
+ * More details, see jiang's paper - <a href="https://ieeexplore.ieee.org/document/940942">
+ *     A Polynomial Algorithm for Testing Diagnosability of Discrete-Event Systems</a>}
+ * <br />
  *
- * More details, see jiang's paper - A Polynomial Algorithm for Testing Diagnosability of Discrete-Event Systems.
- *
+ * REMARK: Single faulty mode is only considered.
  * @author rovo98
  * @version 1.0.0
  * @since 2019.12.27

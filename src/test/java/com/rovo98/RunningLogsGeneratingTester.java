@@ -7,7 +7,7 @@ public class RunningLogsGeneratingTester {
     @Test
     void generatingLogs() {
         RunningLogsGenerator.setVerbose(true);
-        DFAConstructor dfaConstructor = new SimpleDFAConstructor();
+        DFAConstructor dfaConstructor = SimpleDFAConstructor.getInstance();
         RunningLogsGenerator.generate(
                 50,
                 dfaConstructor.constructRandomDFA(50, 100),
