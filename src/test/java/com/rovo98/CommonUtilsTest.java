@@ -30,13 +30,19 @@ public class CommonUtilsTest {
     }
 
     @Test
-    void testLoadingDfaConfigs() {
+    void testLoadingDfaConfigAndGeneratingLogs() {
         // Only using diagnosable DFA to generate logs make sense.
+        // example without extra normal component and multi-faulty mode.
 //        Optional<Object[]> result = CommonUtils.loadDFAConfigs(
 //                "2020-01-06 10:48:17_czE4OmZzNDphczE0OmZlczI=_config");
 
+        // example with extra normal component but without multi-faulty mode.
+//        Optional<Object[]> result = CommonUtils.loadDFAConfigs(
+//                "2020-01-09 22:54:38_czE4OmZzNDphczE2OmZlczI=_config");
+
+        // example with extra normal component and multi-faulty mode.
         Optional<Object[]> result = CommonUtils.loadDFAConfigs(
-                "2020-01-09 22:54:38_czE4OmZzNDphczE2OmZlczI=_config");
+                "2020-01-14 14:09:47_czE3OmZzNDphczE0OmZlczI=_config");
         Assertions.assertTrue(result.isPresent());
         Object[] res = result.get();
         DFANode root = (DFANode) res[0];
@@ -46,9 +52,28 @@ public class CommonUtilsTest {
         Assertions.assertNotNull(dfaConfig);
 
         CommonUtils.printDfaConfigs(dfaConfig);
-        RunningLogsGenerator.setVerbose(false);
-        RunningLogsGenerator.setMinSteps(10);
+        RunningLogsGenerator.setVerbose(true);
+        RunningLogsGenerator.setMinSteps(20);
         RunningLogsGenerator.setMaxSteps(40);
-        RunningLogsGenerator.generate(100_000, root, dfaConfig, true);
+        RunningLogsGenerator.generate(10, root, dfaConfig, false);
+    }
+
+    @Test
+    void testLoadingDfaConfig() {
+//        Optional<Object[]> result = CommonUtils.loadDFAConfigs(
+//                "2020-01-09 22:54:38_czE4OmZzNDphczE2OmZlczI=_config");
+
+        Optional<Object[]> result = CommonUtils.loadDFAConfigs(
+                "2020-01-14 14:09:47_czE3OmZzNDphczE0OmZlczI=_config");
+
+        Assertions.assertTrue(result.isPresent());
+        Object[] res = result.get();
+        DFANode root = (DFANode) res[0];
+        DFAConfig dfaConfig = (DFAConfig) res[1];
+
+        Assertions.assertNotNull(root);
+        Assertions.assertNotNull(dfaConfig);
+
+        CommonUtils.printDfaConfigs(dfaConfig);
     }
 }

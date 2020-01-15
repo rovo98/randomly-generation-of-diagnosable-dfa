@@ -3,6 +3,8 @@ package com.rovo98.utils;
 import com.rovo98.DFAConfig;
 import com.rovo98.DFANode;
 import com.rovo98.diagnosability.CompositeNode;
+import com.rovo98.diagnosability.MultiFaultyCompositeNode;
+import com.rovo98.diagnosability.MultiFaultyNDDFANode;
 import com.rovo98.diagnosability.NDDFANode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,10 +139,14 @@ public class CommonUtils {
 
         System.out.println("selected observable events : " + Arrays.toString(dfaConfig.getObservableEvents()));
         System.out.println("selected unobservable events : " + Arrays.toString(dfaConfig.getUnobservableEvents()));
+        System.out.println("Is extra normal: " + dfaConfig.isExtraNormal());
+        System.out.println("Is multi-faulty mode: " + dfaConfig.isMultiFaulty());
     }
 
     /**
      * Returns a simple key for identifying observer node in a map.
+     * <br />
+     * REMARKS: only used for single faulty mode.
      *
      * @param state       the state of the observer node.
      * @param failureType the failure type of the observer node.
@@ -152,6 +158,9 @@ public class CommonUtils {
 
     /**
      * Returns a simple key for identifying the given Nd-dfa node.
+     * <br />
+     * REMARKS: only used for single faulty mode.
+     *
      * @param node a nd-dfa node.
      * @return A simple key for identifying the given Nd-dfa node in a map
      */
@@ -160,7 +169,41 @@ public class CommonUtils {
     }
 
     /**
+     * Returns a simple key for identifying observer node in a map.
+     * <br />
+     * REMARKS: only used for multi-faulty mode.
+     *
+     * @param state        the state of the observer node.
+     * @param failureTypes A list of failure types of the observer node.
+     * @return A simple key for identifying observer node in a map.
+     */
+    public static String getObserverNodeIdenticalKeyMultiFaulty(int state, List<String> failureTypes) {
+        // sort the given failureTypes list first
+        Collections.sort(failureTypes);
+        // returned example: (1, {F1,F2})
+        String key = "(" + state + ",{";
+        for (String ft : failureTypes)
+            key = key.concat(ft).concat(",");
+        key = key.substring(0, key.length() - 1);
+        return key.concat("})");
+    }
+
+    /**
+     * Returns a simple key for identifying observer node in a map.
+     * <br />
+     * REMARKS: only used for multi-faulty mode.
+     *
+     * @param node A multi-faulty nd-observer node.
+     * @return A simple key for identifying observer node in a map.
+     */
+    public static String getObserverNodeIdenticalKeyMultiFaulty(MultiFaultyNDDFANode node) {
+        return getObserverNodeIdenticalKeyMultiFaulty(node.getState(), node.getFailureTypes());
+    }
+
+    /**
      * Returns a simple key for identifying composite node in a map.
+     * <br />
+     * REMARKS: only used for single faulty mode.
      *
      * @param firstState        the first state of the composite node.
      * @param firstFailureType  the first failure type attached with the first state.
@@ -170,12 +213,14 @@ public class CommonUtils {
      */
     public static String getCompositeNodeIdenticalKey(int firstState, String firstFailureType,
                                                       int secondState, String secondFailureType) {
-        return "((" + firstState + "," + firstFailureType + "),(" +
-                secondState + "," + secondFailureType + "))";
+        return "(" + getObserverNodeIdenticalKey(firstState, firstFailureType) + "," +
+                getObserverNodeIdenticalKey(secondState, secondFailureType) + ")";
     }
 
     /**
      * Returns a simple key for identifying the given composited node.
+     * <br />
+     * REMARKS: only used for single faulty mode.
      *
      * @param node a composited dfa node.
      * @return A simple key for identifying the given composited node in a map.
@@ -183,5 +228,40 @@ public class CommonUtils {
     public static String getCompositeNodeIdenticalKey(CompositeNode node) {
         return getCompositeNodeIdenticalKey(node.getFirstState(), node.getFirstFailureType(),
                 node.getSecondState(), node.getSecondFailureType());
+    }
+
+    /**
+     * Returns a simple key for identifying composite node in a map.
+     * <br />
+     * REMARKS: only used for multi-faulty mode.
+     *
+     * @param firstState         the first state of the composite node.
+     * @param firstFailureTypes  A list of the failure types for the first state.
+     * @param secondState        the second state of the composite node.
+     * @param secondFailureTypes A list of the failure types for the second state.
+     * @return A simple key for identifying composite node in a map.
+     */
+    public static String getCompositeNodeIdenticalKeyMultiFaulty(int firstState, List<String> firstFailureTypes,
+                                                                 int secondState, List<String> secondFailureTypes) {
+        // sort the given failureTypes list first
+        Collections.sort(firstFailureTypes);
+        Collections.sort(secondFailureTypes);
+        // returned example: ((1,{F1}),(20,{F1,F2}))
+        return "(" + getObserverNodeIdenticalKeyMultiFaulty(firstState, firstFailureTypes) + "," +
+                getObserverNodeIdenticalKeyMultiFaulty(secondState, secondFailureTypes) + ")";
+    }
+
+    /**
+     * Returns a simple key for identifying composite node in a map.
+     * <br />
+     * REMARKS: only used for multi-faulty mode.
+     *
+     * @param node A composited node.
+     * @return A simple key for identifying composite node in a map.
+     */
+    public static String getCompositeNodeIdenticalKeyMultiFaulty(MultiFaultyCompositeNode node) {
+        return getCompositeNodeIdenticalKeyMultiFaulty(
+                node.getFirstState(), node.getFirstFailureTypes(),
+                node.getSecondState(), node.getSecondFailureTypes());
     }
 }

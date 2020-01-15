@@ -42,7 +42,8 @@ public class RunningLogsGenerator {
     private static int maxSteps = 100;
 
     // this class can not be instanced.
-    private RunningLogsGenerator() {}
+    private RunningLogsGenerator() {
+    }
 
     /**
      * settings control whether to print out the debug msg for every generated logs.
@@ -103,7 +104,10 @@ public class RunningLogsGenerator {
         LOGGER.info("Generating running logs..., size: {}, steps range: [{}, {}]", logSize, minSteps, maxSteps);
 
         runningLogs = new HashMap<>(logSize);
-        statistics = new int[dfaConfig.faultyEvents.length + 1];
+        if (dfaConfig.multiFaulty)
+            statistics = new int[(int) Math.pow(2, dfaConfig.faultyEvents.length)];
+        else
+            statistics = new int[dfaConfig.faultyEvents.length + 1];
 
         for (int i = 0; i < logSize; i++) {
             Random r = new Random();
@@ -120,8 +124,8 @@ public class RunningLogsGenerator {
         }
         LOGGER.info("Running logs generated.All (duplicates removed): {} Normal logs: {}",
                 runningLogs.size(), statistics[0]);
-        for (int i = 0; i < dfaConfig.faultyEvents.length; i++)
-            LOGGER.info("====>\t faulty logs, T{}: {}", (i + 1), statistics[i + 1]);
+        for (int i = 1; i < statistics.length; i++)
+            LOGGER.info("====>\t faulty logs, T{}: {}", i, statistics[i]);
 
         // Saving the logs to file.
         if (saveToFile) {
@@ -148,6 +152,7 @@ public class RunningLogsGenerator {
 
     }
 
+    // Attaching the log type. Only single faulty mode is considered.
     private static String attachingLabel(StringBuilder log, DFAConfig dfaConfig) {
         for (int i = 0; i < dfaConfig.unobservableEvents.length; i++) {
             if (log.toString().indexOf(dfaConfig.unobservableEvents[i]) >= 0) {
@@ -166,6 +171,28 @@ public class RunningLogsGenerator {
         return log.toString();
     }
 
+    // Attaching the log types. multi-faulty mode is considered.
+    private static String attachingLabelMultiFaulty(StringBuilder log, DFAConfig dfaConfig) {
+        int faultyTypes = dfaConfig.faultyEvents.length;
+        byte[] faultyFlags = new byte[faultyTypes];
+        for (int i = 0; i < dfaConfig.unobservableEvents.length; i++) {
+            if (log.toString().indexOf(dfaConfig.unobservableEvents[i]) >= 0) {
+                log = new StringBuilder(log.toString()
+                        .replaceAll(dfaConfig.unobservableEvents[i] + "", ""));
+                faultyFlags[i] = 1;
+            }
+        }
+        int type = 0;
+        for (int i = 0; i < faultyTypes; i++) {
+            type += faultyFlags[i] * Math.pow(2, (faultyTypes) - i - 1);
+        }
+        log.append("T").append(type);
+        if (showGeneratedLogs)
+            LOGGER.debug("Generated log: {}", log.toString());
+        return log.toString();
+    }
+
+    // returns a running log of the random stopSteps length.
     private static String containsVisitedTraversal(int stopSteps, DFANode root, DFAConfig dfaConfig) {
         if (showGeneratedLogs)
             LOGGER.debug("constructing a log using visited approach, expected len->{}", stopSteps);
@@ -175,6 +202,7 @@ public class RunningLogsGenerator {
             Random r = new Random();
             Character[] symbols = pNode.transitions.keySet().toArray(new Character[0]);
             // if no transitions for current node. stop traversing.
+            // Since dfa may exists terminal states.
             if (symbols.length == 0)
                 break;
             // navigating to the next unvisited node.
@@ -186,6 +214,8 @@ public class RunningLogsGenerator {
         }
         if (showGeneratedLogs)
             LOGGER.debug("Generated observation({}): {}", log.toString().length(), log.toString());
+        if (dfaConfig.multiFaulty)
+            return attachingLabelMultiFaulty(log, dfaConfig);
         return attachingLabel(log, dfaConfig);
     }
 
@@ -217,8 +247,8 @@ public class RunningLogsGenerator {
             String statisticInfo = "";
             statisticInfo = statisticInfo.concat("Logs size: " + runningLogs.size())
                     .concat(", Normal logs: " + statistics[0]);
-            for (int i = 0; i < dfaConfig.faultyEvents.length; i++) {
-                statisticInfo = statisticInfo.concat(", T" + (i + 1) + " logs: " + statistics[i + 1]);
+            for (int i = 1; i < statistics.length; i++) {
+                statisticInfo = statisticInfo.concat(", T" + i + " logs: " + statistics[i]);
             }
             // add observable event set info
             String obsInfo = "[";
@@ -255,7 +285,7 @@ public class RunningLogsGenerator {
         DFAConstructor constructor = SimpleDFAConstructor.getInstance();
         RunningLogsGenerator.generate(
                 10,
-                constructor.constructRandomDFAWithDiagnosability(11, 20),
+                constructor.constructRandomDFAWithDiagnosability(11, 20, false),
                 constructor.getDFAConfig());
     }
 }

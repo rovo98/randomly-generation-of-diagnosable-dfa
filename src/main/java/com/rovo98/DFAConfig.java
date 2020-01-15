@@ -28,6 +28,12 @@ public class DFAConfig implements Serializable {
 
     String alphabetSpace = "abcdefghijklmnopqrstuvwxyz"; // possible observable events space.
 
+    // Flag to show whether the constructed dfa uses extra normal component.
+    boolean extraNormal = false;
+
+    // Flag to show whether the constructed dfa is multi-faulty or not.
+    boolean multiFaulty = false;
+
     // getters and setters.
     public int getStateSize() {
         return stateSize;
@@ -99,5 +105,21 @@ public class DFAConfig implements Serializable {
 
     public void setAlphabetSpace(String alphabetSpace) {
         this.alphabetSpace = alphabetSpace;
+    }
+
+    public boolean isExtraNormal() {
+        return extraNormal;
+    }
+
+    public void setExtraNormal(boolean extraNormal) {
+        this.extraNormal = extraNormal;
+    }
+
+    public boolean isMultiFaulty() {
+        return multiFaulty;
+    }
+
+    public void setMultiFaulty(boolean multiFaulty) {
+        this.multiFaulty = multiFaulty;
     }
 }

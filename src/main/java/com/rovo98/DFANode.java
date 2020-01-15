@@ -53,8 +53,6 @@ public class DFANode implements Serializable {
         return dfaConfig.statesMap.get(transitions.get(symbol));
     }
 
-    // TODO: code refactoring may needed. current implementation is less elegant.
-
     // getters.
     public int getState() {
         return state;

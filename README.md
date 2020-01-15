@@ -169,3 +169,33 @@ References:
 ![](./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_03_composition.png)
 4. Checking whether there exists a cycle starting from nodes whose state has different labels.
 > 该 DFA 具备可诊断性。
+
+#### example 3 - with extra normal component.
+
+1. The architecture of the given constructed dfa.
+![](./images/dfa-example_08_czE4OmZzNDphczE2OmZlczI=_extra_normal_01_arch.png)
+
+2. Obtains a nondeterministic finite machine of the given dfa.
+![](./images/dfa-example_08_czE4OmZzNDphczE2OmZlczI=_extra_normal_02_nd_observer.png)
+
+3. Computes the product composition of the two same nondeterministic finite machines got before.
+![](./images/dfa-example_08_czE4OmZzNDphczE2OmZlczI=_extra_normal_03_composition.png)
+> This constructed dfa is diagnosable.
+
+## 3. Multi-faulty mode
+
+多错误模式，即考虑错误叠加的 DFA 构造方式。
+
+### example
+
+The following is an example with multi-faulty mode and extra normal component.
+
+1. The architecture of the constructed dfa.
+![](./images/dfa-example_07_czE3OmZzNDphczE0OmZlczI=_multi-faulty_01_arch.png)
+
+2. Obtains nondeterministic finite machine of the given dfa.
+![](./images/dfa-example_07_czE3OmZzNDphczE0OmZlczI=_multi-faulty_02_nd-observer.png)
+
+3. Computes the product composition of two same nd-observer got above.
+![](./images/dfa-example_07_czE3OmZzNDphczE0OmZlczI=_multi-faulty_03_composition.png)
+> This dfa is diagnosable.

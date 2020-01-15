@@ -6,11 +6,11 @@ public class RunningLogsGeneratingTester {
 
     @Test
     void generatingLogs() {
-        RunningLogsGenerator.setVerbose(true);
         DFAConstructor dfaConstructor = SimpleDFAConstructor.getInstance();
+        RunningLogsGenerator.setVerbose(true);
         RunningLogsGenerator.generate(
-                50,
-                dfaConstructor.constructRandomDFA(50, 100),
+                30,
+                dfaConstructor.constructRandomDFA(50, 100, false),
                 dfaConstructor.getDFAConfig());
     }
 }

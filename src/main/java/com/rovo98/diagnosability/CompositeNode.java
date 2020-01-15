@@ -9,9 +9,10 @@ import java.util.List;
  * <br />
  * <br />
  * More details, see jiang's paper - <a href="https://ieeexplore.ieee.org/document/940942">
- *     A Polynomial Algorithm for Testing Diagnosability of Discrete-Event Systems</a>}
+ * A Polynomial Algorithm for Testing Diagnosability of Discrete-Event Systems</a>}
  * <br />
- * REMARK: Single faulty mode is only considered.
+ * REMARK: Only single faulty mode is considered.
+ *
  * @author rovo98
  * @version 1.0.0
  * @since 2019.12.27
@@ -47,7 +48,6 @@ public class CompositeNode {
         this.transitions.add(newTransition);
     }
     // getters.
-
     public int getFirstState() {
         return firstState;
     }

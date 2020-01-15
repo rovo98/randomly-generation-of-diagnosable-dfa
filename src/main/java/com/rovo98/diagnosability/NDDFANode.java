@@ -14,7 +14,7 @@ import java.util.List;
  *     A Polynomial Algorithm for Testing Diagnosability of Discrete-Event Systems</a>}
  * <br />
  *
- * REMARK: Single faulty mode is only considered.
+ * REMARK: Only single faulty mode is considered.
  * @author rovo98
  * @version 1.0.0
  * @since 2019.12.27

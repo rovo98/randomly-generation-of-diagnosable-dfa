@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Naive implementation of interface {@link DFAConstructor} with randomization.
@@ -24,7 +25,8 @@ public class SimpleDFAConstructor implements DFAConstructor {
     private DFAConfig dfaConfig; // configuration for this DFA constructor.
 
     // this class can not be instanced outside this class.
-    private SimpleDFAConstructor() {}
+    private SimpleDFAConstructor() {
+    }
 
     // singleton wrapper class.
     private static class SingletonWrapper {
@@ -38,6 +40,71 @@ public class SimpleDFAConstructor implements DFAConstructor {
      */
     public static DFAConstructor getInstance() {
         return SingletonWrapper.INSTANCE;
+    }
+
+
+    @Override
+    public DFANode constructRandomDFAWithDiagnosability(int minXNum, int maxXNum, boolean multiFaulty) {
+        return this.constructRandomDFAWithDiagnosability(minXNum, maxXNum, multiFaulty, false);
+    }
+
+    @Override
+    public DFANode constructRandomDFAWithDiagnosability(int minXNum, int maxXNum,
+                                                        boolean multiFaulty, boolean saveConfig) {
+        DFANode constructed = this.constructRandomDFA(minXNum, maxXNum, multiFaulty);
+        Diagnoser dfaDiagnoser = NeotypeDiagnoser.getInstance();
+        while (!dfaDiagnoser.isDiagnosable(constructed, dfaConfig)) {
+            LOGGER.info("Constructed DFA does have diagnosability! dropped.");
+            constructed = this.constructRandomDFA(minXNum, maxXNum, multiFaulty);
+        }
+        if (saveConfig)
+            saveDFAConfigs(constructed, dfaConfig);
+        return constructed;
+    }
+
+    @Override
+    public DFANode constructRandomDFAExtraNormalWithDiagnosability(int minXNum, int maxXNum,
+                                                                   boolean multiFaulty) {
+        return this.constructRandomDFAExtraNormalWithDiagnosability(minXNum, maxXNum, multiFaulty, false);
+    }
+
+    @Override
+    public DFANode constructRandomDFAExtraNormalWithDiagnosability(int minXNum, int maxXNum,
+                                                                   boolean multiFaulty,
+                                                                   boolean saveConfig) {
+        DFANode constructed = this.constructRandomDFAExtraNormal(minXNum, maxXNum, multiFaulty);
+        Diagnoser dfaDiagnoser = NeotypeDiagnoser.getInstance();
+        while (!dfaDiagnoser.isDiagnosable(constructed, dfaConfig)) {
+            LOGGER.info("Constructed DFA does have diagnosability! dropped.");
+            constructed = this.constructRandomDFAExtraNormal(minXNum, maxXNum, multiFaulty);
+        }
+        if (saveConfig)
+            saveDFAConfigs(constructed, dfaConfig);
+        return constructed;
+    }
+
+    @Override
+    public DFANode constructRandomDFA(int minXNum, int maxXNum, boolean multiFaulty) {
+        return this.constructRandomDFA(minXNum, maxXNum, multiFaulty, false);
+    }
+
+    @Override
+    public DFANode constructRandomDFA(int minXNum, int maxXNum, boolean multiFaulty,
+                                      boolean saveConfig) {
+        return this.constructRandomDFAWithExtraNormalComp(minXNum, maxXNum,
+                false, multiFaulty, saveConfig);
+    }
+
+    @Override
+    public DFANode constructRandomDFAExtraNormal(int minXNum, int maxXNum, boolean multiFaulty) {
+        return this.constructRandomDFAExtraNormal(minXNum, maxXNum, multiFaulty, false);
+    }
+
+    @Override
+    public DFANode constructRandomDFAExtraNormal(int minXNum, int maxXNum, boolean multiFaulty,
+                                                 boolean saveConfig) {
+        return this.constructRandomDFAWithExtraNormalComp(minXNum, maxXNum,
+                true, multiFaulty, saveConfig);
     }
 
     /**
@@ -60,8 +127,7 @@ public class SimpleDFAConstructor implements DFAConstructor {
         for (int i = 0; i < dfaConfig.stateSize; i++) {
             dfaConfig.states[i] = i;
         }
-        // alphabet size: range[10 ~ 20]
-        // FIXME: using dynamic design rather than fixed randomization.
+        // alphabet size: range[6 ~ 16] or [10, 20]
         int base = dfaConfig.stateSize > 20 ? 10 : 6;
         int alphabetSize = r.nextInt(11) + base;
         dfaConfig.alphabet = new char[alphabetSize];
@@ -121,68 +187,23 @@ public class SimpleDFAConstructor implements DFAConstructor {
         LOGGER.debug("selected unobservable events : {}", Arrays.toString(dfaConfig.unobservableEvents));
     }
 
-    @Override
-    public DFANode constructRandomDFAWithDiagnosability(int minXNum, int maxXNum) {
-        return this.constructRandomDFAWithDiagnosability(minXNum, maxXNum, false);
-    }
 
-    @Override
-    public DFANode constructRandomDFAWithDiagnosability(int minXNum, int maxXNum, boolean saveConfig) {
-        DFANode constructed = this.constructRandomDFA(minXNum, maxXNum);
-        Diagnoser dfaDiagnoser = NeotypeDiagnoser.getInstance();
-        while (!dfaDiagnoser.isDiagnosable(constructed, dfaConfig)) {
-            LOGGER.info("Constructed DFA does have diagnosability! dropped.");
-            constructed = this.constructRandomDFA(minXNum, maxXNum);
-        }
-        if (saveConfig)
-            saveDFAConfigs(constructed, dfaConfig);
-        return constructed;
-    }
-
-    @Override
-    public DFANode constructRandomDFAExtraNormalWithDiagnosability(int minXNum, int maxXNum) {
-        return this.constructRandomDFAExtraNormalWithDiagnosability(minXNum, maxXNum, false);
-    }
-
-    @Override
-    public DFANode constructRandomDFAExtraNormalWithDiagnosability(int minXNum, int maxXNum, boolean saveConfig) {
-        DFANode constructed = this.constructRandomDFAExtraNormal(minXNum, maxXNum);
-        Diagnoser dfaDiagnoser = NeotypeDiagnoser.getInstance();
-        while (!dfaDiagnoser.isDiagnosable(constructed, dfaConfig)) {
-            LOGGER.info("Constructed DFA does have diagnosability! dropped.");
-            constructed = this.constructRandomDFAExtraNormal(minXNum, maxXNum);
-        }
-        if (saveConfig)
-            saveDFAConfigs(constructed, dfaConfig);
-        return constructed;
-    }
-
-    @Override
-    public DFANode constructRandomDFA(int minXNum, int maxXNum) {
-        return this.constructRandomDFA(minXNum, maxXNum, false);
-    }
-
-    @Override
-    public DFANode constructRandomDFA(int minXNum, int maxXNum, boolean saveConfig) {
-        return this.constructRandomDFAWithExtraNormalComp(minXNum, maxXNum,
-                false, saveConfig);
-    }
-
-    @Override
-    public DFANode constructRandomDFAExtraNormal(int minXNum, int maxXNum) {
-        return this.constructRandomDFAExtraNormal(minXNum, maxXNum, false);
-    }
-
-    @Override
-    public DFANode constructRandomDFAExtraNormal(int minXNum, int maxXNum, boolean saveConfig) {
-        return this.constructRandomDFAWithExtraNormalComp(minXNum, maxXNum,
-                true, saveConfig);
-    }
-
-
+    /**
+     * Returns a constructed random DFA.
+     *
+     * @param minXNum               the maximum number of the states in the constructed DFA
+     *                              (without extra normal component).
+     * @param maxXNum               the minimum number of the states in the constructed DFA
+     *                              (without extra normal component).
+     * @param withAnotherNormalComp control to whether to add extra normal component or not.
+     * @param multiFaulty           control to whether to apply multiply faulty mode for constructing DFA or not.
+     * @param saveConfig            control to whether to save the configurations of the constructed DFA.
+     * @return A constructed random DFA.
+     */
     // default implementation of the random dfa construction.
     private DFANode constructRandomDFAWithExtraNormalComp(int minXNum, int maxXNum,
-                                                          boolean withAnotherNormalComp, boolean saveConfig) {
+                                                          boolean withAnotherNormalComp,
+                                                          boolean multiFaulty, boolean saveConfig) {
         // TODO: range checking may be needed or refactoring
         if (minXNum <= 10)
             throw new IllegalArgumentException("Given minXNum should be larger than 10.");
@@ -217,13 +238,31 @@ public class SimpleDFAConstructor implements DFAConstructor {
         }
         // connecting normalComponent with other faulty components.
         LOGGER.debug("Composing all the components...");
-        int faultySize = dfaConfig.faultyEvents.length;
+        int minSteps = 10;
+        int maxSteps = dfaConfig.stateSize > 20 ? 30 : 20;
+        int faultyType = 0;
         for (DFANode component : faultyComponents)
-            // FIXME: current implementation: faulty type assignment is reversed for the given faulty events.
-            // natural order may be more adaptive.
-            connectingNormalCompWithFaultyComp(normalComponent, component, --faultySize);
+            connectingCompWithFaultyComp(normalComponent, component, faultyType++,
+                    minSteps, maxSteps, false);
+
+        if (multiFaulty) {
+            // set multi-faulty flag of the configuration.
+            dfaConfig.setMultiFaulty(true);
+            LOGGER.debug("Multiply faulty mode is considered.");
+            minSteps = dfaConfig.faultyEvents.length;
+            maxSteps = minSteps + 5;
+            for (DFANode component : faultyComponents) {
+                for (int i = 0; i < faultyComponents.length; i++) {
+                    connectingCompWithFaultyComp(component, faultyComponents[i], i,
+                            minSteps, maxSteps, true);
+                }
+            }
+            LOGGER.debug("====>\tMulti-faulty component connection done!");
+        }
 
         if (withAnotherNormalComp) {
+            // Set extra normal flag.
+            dfaConfig.setExtraNormal(true);
             int[] acStates = new int[dfaConfig.stateSize / 2];
             // initialization.
             for (int i = 0; i < acStates.length; i++)
@@ -289,7 +328,7 @@ public class SimpleDFAConstructor implements DFAConstructor {
 
         Random r = new Random();
         DFANode pNode = root;
-        while (steps < size) {     // stop condition: when all states are visited and do one more iteration.
+        while (steps < size) {
             // randomly choose another state from unvisited states set.
             int nextXIndex = r.nextInt(unvisitedList.size());
             int nextState = unvisitedList.get(nextXIndex);
@@ -374,32 +413,86 @@ public class SimpleDFAConstructor implements DFAConstructor {
     /**
      * Composing second DFA component into first one.
      *
-     * @param compA one DFA component.
-     * @param compB anther DFA component.
+     * @param compA     one DFA component.
+     * @param compB     anther DFA component.
+     * @param minSteps  the minimum number of the navigations for {@code compA} to take
+     *                  before add faulty transition.
+     * @param maxSteps  the maximum number of the navigations for {@code compA} to take
+     *                  before add faulty transition.
+     * @param allFaulty whether the given dfa components are all faulty or not.
      */
-    private void connectingNormalCompWithFaultyComp(DFANode compA, DFANode compB, int faultyMode) {
-        int faultyState = compB.state;
+    private void connectingCompWithFaultyComp(DFANode compA, DFANode compB,
+                                              int faultyMode, int minSteps, int maxSteps,
+                                              boolean allFaulty) {
+        // if the given components are the same, return and do nothing.
+        if (compA.equals(compB))
+            return;
         DFANode pNode = compA;
-
+        DFANode fpNode = compB;
         // traverses several steps, and then adding the faulty transition
         // to the node which we stop at.
         Random r = new Random();
-        // FIXME: randomization bound should be a dynamic design here.
-        int bound = dfaConfig.stateSize > 20 ? 31 : 21;
-        int rt = r.nextInt(bound) + 10; // 10 ~ 30 or 10 ~ 40
+        int rt = r.nextInt(maxSteps - minSteps + 1) + minSteps;
         while (rt > 0) {
             // filtering the unobservable events
-            Character[] symbols = pNode.transitions.keySet().stream()
-                    .filter(s -> {
-                        for (char c : dfaConfig.unobservableEvents)
-                            if (c == s) return false;
-                        return true;
-                    }).toArray(Character[]::new);
+            Character[] symbols = getObservableEvent(pNode);
             char symbol = symbols[r.nextInt(symbols.length)];
             pNode = pNode.navigate(symbol, dfaConfig);
             rt--;
         }
-        pNode.addTransition(dfaConfig.unobservableEvents[faultyMode], faultyState);
+        if (allFaulty) {
+            List<Integer> faultyStates = new ArrayList<>();
+            Set<Integer> visitedStates = new HashSet<>();
+            Deque<DFANode> queue = new ArrayDeque<>();
+            queue.offer(fpNode);
+            while (!queue.isEmpty()) {
+                DFANode fppNode = queue.poll();
+                faultyStates.add(fppNode.state);
+                visitedStates.add(fppNode.state);
+                queue.addAll(fppNode.transitions.keySet().stream()
+                        .filter(s -> {
+                            for (char ue : dfaConfig.unobservableEvents)
+                                if (ue == s) return false;
+                            return true;
+                        })
+                        .map(s -> fppNode.navigate(s, dfaConfig))
+                        .filter(node -> !visitedStates.contains(node.state) && !queue.contains(node))
+                        .collect(Collectors.toList()));
+            }
+            Integer[] fsArr = faultyStates.toArray(new Integer[0]);
+            fpNode = dfaConfig.statesMap.get(fsArr[r.nextInt(fsArr.length)]);
+            // select a a node which do not have an unobservable transition to first component's node.
+            while (existsUnobservableCycle(pNode, fpNode)) {
+                fpNode = dfaConfig.statesMap.get(fsArr[r.nextInt(fsArr.length)]);
+            }
+        }
+        pNode.addTransition(dfaConfig.unobservableEvents[faultyMode], fpNode.state);
+    }
+
+    // returns true if there exists a simple unobservable event cycle between
+    // the given nodes.
+    private boolean existsUnobservableCycle(DFANode ffNode, DFANode sfNode) {
+        List<Character> sfFaultySymbols = sfNode.transitions.keySet().stream()
+                .filter(s -> {
+                    for (char ue : dfaConfig.unobservableEvents)
+                        if (ue == s) return true;
+                    return false;
+                }).collect(Collectors.toList());
+        if (sfFaultySymbols.size() == 0) return false;
+        for (char ue : sfFaultySymbols)
+            if (sfNode.navigate(ue, dfaConfig).state == ffNode.state)
+                return true;
+        return false;
+    }
+
+    // returns the observable events of the given DFAnode.
+    private Character[] getObservableEvent(DFANode curr) {
+        return curr.transitions.keySet().stream()
+                .filter(s -> {
+                    for (char c : dfaConfig.unobservableEvents)
+                        if (c == s) return false;
+                    return true;
+                }).toArray(Character[]::new);
     }
 
     // connects the given faulty component with the given normal component ( by adding a observable transition).
@@ -408,17 +501,16 @@ public class SimpleDFAConstructor implements DFAConstructor {
         DFANode npNode = normal;
 
         Random r = new Random();
-        // FIXME: A more elegant design should be taken to navigates nodes in faulty component.
-        int rt = r.nextInt(5);
+        int rt = r.nextInt(dfaConfig.faultyEvents.length) + 2;
         // randomly navigating several times in faulty component.
         while (rt > 0) {
-            Character[] symbols = pNode.transitions.keySet().toArray(new Character[0]);
+            Character[] symbols = getObservableEvent(pNode);
             char symbol = symbols[r.nextInt(symbols.length)];
             pNode = pNode.navigate(symbol, dfaConfig);
             rt--;
         }
         // also randomly navigating several times in normal component.
-        int nrt = r.nextInt(10);
+        int nrt = r.nextInt(Math.min(dfaConfig.stateSize / 3, 10)) + 3;
         while (nrt > 0) {
             Character[] symbols = npNode.transitions.keySet().toArray(new Character[0]);
             char symbol = symbols[r.nextInt(symbols.length)];
@@ -441,6 +533,7 @@ public class SimpleDFAConstructor implements DFAConstructor {
      */
     public static void main(String[] args) {
         DFAConstructor constructor = SimpleDFAConstructor.getInstance();
-        DFANode constructedRoot = constructor.constructRandomDFAExtraNormalWithDiagnosability(11, 20);
+        DFANode constructedRoot = constructor.constructRandomDFAExtraNormalWithDiagnosability(
+                11, 20, true);
     }
 }
