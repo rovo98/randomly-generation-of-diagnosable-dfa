@@ -1,11 +1,13 @@
 package com.rovo98;
 
 import com.rovo98.utils.CommonUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CommonUtilsTest {
     @Test
@@ -18,9 +20,9 @@ public class CommonUtilsTest {
 
         Optional<Object[]> res = CommonUtils.loadDFAConfigs("testfile.dat");
 
-        Assertions.assertTrue(res.isPresent());
+        assertTrue(res.isPresent());
         Object[] result = res.get();
-        Assertions.assertNotNull(result);
+        assertNotNull(result);
 
         System.out.println(Arrays.toString(result));
         DFANode readDfaNode = (DFANode) result[0];
@@ -43,13 +45,13 @@ public class CommonUtilsTest {
         // example with extra normal component and multi-faulty mode.
         Optional<Object[]> result = CommonUtils.loadDFAConfigs(
                 "2020-01-14 14:09:47_czE3OmZzNDphczE0OmZlczI=_config");
-        Assertions.assertTrue(result.isPresent());
+        assertTrue(result.isPresent());
         Object[] res = result.get();
         DFANode root = (DFANode) res[0];
         DFAConfig dfaConfig = (DFAConfig) res[1];
 
-        Assertions.assertNotNull(root);
-        Assertions.assertNotNull(dfaConfig);
+        assertNotNull(root);
+        assertNotNull(dfaConfig);
 
         CommonUtils.printDfaConfigs(dfaConfig);
         RunningLogsGenerator.setVerbose(true);
@@ -66,13 +68,13 @@ public class CommonUtilsTest {
         Optional<Object[]> result = CommonUtils.loadDFAConfigs(
                 "2020-01-14 14:09:47_czE3OmZzNDphczE0OmZlczI=_config");
 
-        Assertions.assertTrue(result.isPresent());
+        assertTrue(result.isPresent());
         Object[] res = result.get();
         DFANode root = (DFANode) res[0];
         DFAConfig dfaConfig = (DFAConfig) res[1];
 
-        Assertions.assertNotNull(root);
-        Assertions.assertNotNull(dfaConfig);
+        assertNotNull(root);
+        assertNotNull(dfaConfig);
 
         CommonUtils.printDfaConfigs(dfaConfig);
     }

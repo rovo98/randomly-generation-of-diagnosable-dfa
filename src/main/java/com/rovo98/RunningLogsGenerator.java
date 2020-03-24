@@ -23,6 +23,11 @@ import java.util.Random;
  * <br />
  * Storage location can be specified in AppConfigs.properties file in the classpath.
  *
+ * NOTICE: before calling the generate() method, the following options can be tuned.
+ * - minSteps: default 10
+ * - maxSteps: default 100
+ * - verbose : default false.
+ *
  * @author rovo98
  * @version 1.0.0
  * @since 2019.12.21
@@ -57,7 +62,7 @@ public class RunningLogsGenerator {
 
     /**
      * Setting minimum length of the generated log.
-     * By default, 30 is token.
+     * By default, 10 is token.
      *
      * @param ms An Integer representing minimum length of the log to be generated.
      */
@@ -109,7 +114,8 @@ public class RunningLogsGenerator {
         else
             statistics = new int[dfaConfig.faultyEvents.length + 1];
 
-        for (int i = 0; i < logSize; i++) {
+        // generating and adding running logs to the map.
+        while (runningLogs.size() < logSize) {
             Random r = new Random();
             removeConflictedAdd(
                     runningLogs,

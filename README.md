@@ -199,3 +199,16 @@ The following is an example with multi-faulty mode and extra normal component.
 3. Computes the product composition of two same nd-observer got above.
 ![](./images/dfa-example_07_czE3OmZzNDphczE0OmZlczI=_multi-faulty_03_composition.png)
 > This dfa is diagnosable.
+
+## Issues
+
+1. 在考虑多错误模式的情况下，如果每一个错误组件都包含到达除它以外的所有错误组件的错误状态转换的话，当错误事件数量 >= 4 时，创建出来 DFA 几乎都是不可诊断的。
+> 考虑修改错误组件之间的连接方式，或使用不同于现在的错误组件构造方式（错误状态均等分）。
+
+解决方法，考虑以下错误组件的连接方式，假设所有错误组件数量为 ``numOfFaultyComps``, 对于每一个错误组件，从 ``1~numOfFaultyComps-1`` 中随机选择一个数``n``，然后从除当前错误组件外的错误组件中随机选择``n``个组件进行连接。
+
+相对于将一个错误组件与其他所有错误组件进行连接，使用这种方式可以减少连接后的 DFA 的复杂度。以确保生成的 DFA 尽量是具备可诊断性的。
+
+![](./images/dfa-multi-faulty-mode-generation-testing.png)
+
+从上图的测试看，选择 70-100状态进行构造时，经过 52 次构造才出现具备可诊断性的 DFA。效率还是有点低了。

@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
  * @version 1.0.0
  * @since 2019-12-21
  */
+// TODO: using factory pattern to create DFAConstructor may more elegant.
 public class SimpleDFAConstructor implements DFAConstructor {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(SimpleDFAConstructor.class);
@@ -53,10 +54,14 @@ public class SimpleDFAConstructor implements DFAConstructor {
                                                         boolean multiFaulty, boolean saveConfig) {
         DFANode constructed = this.constructRandomDFA(minXNum, maxXNum, multiFaulty);
         Diagnoser dfaDiagnoser = NeotypeDiagnoser.getInstance();
+        int count = 1;
         while (!dfaDiagnoser.isDiagnosable(constructed, dfaConfig)) {
             LOGGER.info("Constructed DFA does have diagnosability! dropped.");
+            System.out.println("\t==> current No of the generated dfa : " + count);
             constructed = this.constructRandomDFA(minXNum, maxXNum, multiFaulty);
+            count++;
         }
+        System.out.println("\t==> No of the diagnosable generated dfa : " + count);
         if (saveConfig)
             saveDFAConfigs(constructed, dfaConfig);
         return constructed;
@@ -74,10 +79,14 @@ public class SimpleDFAConstructor implements DFAConstructor {
                                                                    boolean saveConfig) {
         DFANode constructed = this.constructRandomDFAExtraNormal(minXNum, maxXNum, multiFaulty);
         Diagnoser dfaDiagnoser = NeotypeDiagnoser.getInstance();
+        int count = 0;
         while (!dfaDiagnoser.isDiagnosable(constructed, dfaConfig)) {
             LOGGER.info("Constructed DFA does have diagnosability! dropped.");
+            System.out.println("\t==> current No of the generated dfa : " + count);
             constructed = this.constructRandomDFAExtraNormal(minXNum, maxXNum, multiFaulty);
+            count++;
         }
+        System.out.println("\t==> No of the diagnosable generated dfa : " + count);
         if (saveConfig)
             saveDFAConfigs(constructed, dfaConfig);
         return constructed;
@@ -187,6 +196,7 @@ public class SimpleDFAConstructor implements DFAConstructor {
         LOGGER.debug("selected unobservable events : {}", Arrays.toString(dfaConfig.unobservableEvents));
     }
 
+    // TODO: a fixed state size version should be implemented.
 
     /**
      * Returns a constructed random DFA.
@@ -251,12 +261,35 @@ public class SimpleDFAConstructor implements DFAConstructor {
             LOGGER.debug("Multiply faulty mode is considered.");
             minSteps = dfaConfig.faultyEvents.length;
             maxSteps = minSteps + 5;
-            for (DFANode component : faultyComponents) {
-                for (int i = 0; i < faultyComponents.length; i++) {
-                    connectingCompWithFaultyComp(component, faultyComponents[i], i,
+            // FIXME: current implementation is much complicated. more simple one should be considered.
+            // For most constructed dfa, it does not has the diagnosability.
+            Random r = new Random();
+            int numOfFaultyComps = faultyComponents.length;
+            boolean[] selected = new boolean[numOfFaultyComps];
+            for (int i = 0; i < numOfFaultyComps; i++) {
+                // mark current faulty component as selected
+                selected[i] = true;
+                int numOfCompsToBeConnected = r.nextInt(numOfFaultyComps-1) + 1;
+                for (int j = 0; j < numOfCompsToBeConnected; j++) {
+                    int chosen = r.nextInt(numOfFaultyComps);
+                    while (chosen == i || selected[chosen]) {
+                        chosen = r.nextInt(numOfFaultyComps);
+                    }
+                    selected[chosen] = true;
+                    connectingCompWithFaultyComp(faultyComponents[i], faultyComponents[chosen], chosen,
                             minSteps, maxSteps, true);
                 }
+                // reset selected flags.
+                Arrays.fill(selected, false);
             }
+//            for (DFANode component : faultyComponents) {
+//                for (int i = 0; i < faultyComponents.length; i++) {
+//                    connectingCompWithFaultyComp(component, faultyComponents[i], i,
+//                            minSteps, maxSteps, true);
+//                }
+                // choosing 1 ~ max faulty components to connected with - maybe adaptable.
+                // NOTICE: A more simple approach: this implementation does not cover all faulty types.
+//            }
             LOGGER.debug("====>\tMulti-faulty component connection done!");
         }
 
@@ -429,59 +462,88 @@ public class SimpleDFAConstructor implements DFAConstructor {
             return;
         DFANode pNode = compA;
         DFANode fpNode = compB;
-        // traverses several steps, and then adding the faulty transition
-        // to the node which we stop at.
         Random r = new Random();
-        int rt = r.nextInt(maxSteps - minSteps + 1) + minSteps;
-        while (rt > 0) {
-            // filtering the unobservable events
-            Character[] symbols = getObservableEvent(pNode);
-            char symbol = symbols[r.nextInt(symbols.length)];
-            pNode = pNode.navigate(symbol, dfaConfig);
-            rt--;
-        }
         if (allFaulty) {
-            List<Integer> faultyStates = new ArrayList<>();
-            Set<Integer> visitedStates = new HashSet<>();
-            Deque<DFANode> queue = new ArrayDeque<>();
-            queue.offer(fpNode);
-            while (!queue.isEmpty()) {
-                DFANode fppNode = queue.poll();
-                faultyStates.add(fppNode.state);
-                visitedStates.add(fppNode.state);
-                queue.addAll(fppNode.transitions.keySet().stream()
-                        .filter(s -> {
-                            for (char ue : dfaConfig.unobservableEvents)
-                                if (ue == s) return false;
-                            return true;
-                        })
-                        .map(s -> fppNode.navigate(s, dfaConfig))
-                        .filter(node -> !visitedStates.contains(node.state) && !queue.contains(node))
-                        .collect(Collectors.toList()));
-            }
-            Integer[] fsArr = faultyStates.toArray(new Integer[0]);
-            fpNode = dfaConfig.statesMap.get(fsArr[r.nextInt(fsArr.length)]);
+            // FIXME: faulty components connecting algorithm may has error logic implementation.
+            Integer[] firstFsArr = getFaultyStates(pNode);
+            Integer[] secondFsArr = getFaultyStates(fpNode);
+            fpNode = dfaConfig.statesMap.get(secondFsArr[r.nextInt(secondFsArr.length)]);
             // select a a node which do not have an unobservable transition to first component's node.
-            while (existsUnobservableCycle(pNode, fpNode)) {
-                fpNode = dfaConfig.statesMap.get(fsArr[r.nextInt(fsArr.length)]);
+            Set<Integer> recStack = new HashSet<>();
+            Set<Integer> visitedKeys = new HashSet<>();
+            recStack.add(pNode.state);
+            visitedKeys.add(pNode.state);
+            while (existsUnobservableCycle(fpNode, recStack, visitedKeys)) {
+                pNode = dfaConfig.statesMap.get(firstFsArr[r.nextInt(firstFsArr.length)]);
+                fpNode = dfaConfig.statesMap.get(secondFsArr[r.nextInt(secondFsArr.length)]);
+                recStack.clear();
+                visitedKeys.clear();
+                recStack.add(pNode.state);
+                visitedKeys.add(pNode.state);
+            }
+        } else {
+            // traverses several steps, and then adding the faulty transition
+            // to the node which we stop at.
+            int rt = r.nextInt(maxSteps - minSteps + 1) + minSteps;
+            while (rt > 0) {
+                // filtering the unobservable events
+                Character[] symbols = getObservableEvent(pNode);
+                char symbol = symbols[r.nextInt(symbols.length)];
+                pNode = pNode.navigate(symbol, dfaConfig);
+                rt--;
             }
         }
         pNode.addTransition(dfaConfig.unobservableEvents[faultyMode], fpNode.state);
     }
 
-    // returns true if there exists a simple unobservable event cycle between
-    // the given nodes.
-    private boolean existsUnobservableCycle(DFANode ffNode, DFANode sfNode) {
-        List<Character> sfFaultySymbols = sfNode.transitions.keySet().stream()
+    // returns the faulty states list of the given dfa node.
+    private Integer[] getFaultyStates(DFANode node) {
+        List<Integer> faultyStates = new ArrayList<>();
+        Set<Integer> visitedStates = new HashSet<>();
+        Deque<DFANode> queue = new ArrayDeque<>();
+        queue.offer(node);
+        while (!queue.isEmpty()) {
+            DFANode fppNode = queue.poll();
+            faultyStates.add(fppNode.state);
+            visitedStates.add(fppNode.state);
+            queue.addAll(fppNode.transitions.keySet().stream()
+                    .filter(s -> {
+                        for (char ue : dfaConfig.unobservableEvents)
+                            if (ue == s) return false;
+                        return true;
+                    })
+                    .map(s -> fppNode.navigate(s, dfaConfig))
+                    .filter(n -> !visitedStates.contains(n.state) && !queue.contains(n))
+                    .collect(Collectors.toList()));
+        }
+        return faultyStates.toArray(new Integer[0]);
+    }
+
+    // returns true if there exists a unobservable event cycle starting from
+    // the given nodes.(root node is already in recursion stack and visited set)
+    private boolean existsUnobservableCycle(DFANode node, Set<Integer> recStack,
+                                            Set<Integer> visitedKeys) {
+        if (recStack.contains(node.state))
+            return true;
+        if (visitedKeys.contains(node.state))
+            return false;
+
+        visitedKeys.add(node.state);
+        recStack.add(node.state);
+
+        List<DFANode> children = node.transitions.keySet().stream()
                 .filter(s -> {
                     for (char ue : dfaConfig.unobservableEvents)
                         if (ue == s) return true;
                     return false;
-                }).collect(Collectors.toList());
-        if (sfFaultySymbols.size() == 0) return false;
-        for (char ue : sfFaultySymbols)
-            if (sfNode.navigate(ue, dfaConfig).state == ffNode.state)
+                })
+                .map(s -> node.navigate(s, dfaConfig))
+                .collect(Collectors.toList());
+        for (DFANode n : children)
+            if (existsUnobservableCycle(n, recStack, visitedKeys))
                 return true;
+
+        recStack.remove(node.state);
         return false;
     }
 
@@ -534,6 +596,6 @@ public class SimpleDFAConstructor implements DFAConstructor {
     public static void main(String[] args) {
         DFAConstructor constructor = SimpleDFAConstructor.getInstance();
         DFANode constructedRoot = constructor.constructRandomDFAExtraNormalWithDiagnosability(
-                11, 20, true);
+                80, 100, false, true);
     }
 }

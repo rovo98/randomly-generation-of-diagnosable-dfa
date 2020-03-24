@@ -648,15 +648,25 @@ public class NeotypeDiagnoser implements Diagnoser {
     public static void main(String[] args) {
 //        Optional<Object[]> loaded = CommonUtils
 //                .loadDFAConfigs("2020-01-06 10:48:57_czEzOmZzNDphczc6ZmVzMg==_config");
+          // single faulty-mode without extra normal
 //        Optional<Object[]> loaded = CommonUtils
 //                .loadDFAConfigs("2020-01-06 10:47:30_czE2OmZzNDphczg6ZmVzMg==_config");
 //        Optional<Object[]> loaded = CommonUtils
 //                .loadDFAConfigs("2020-01-06 10:48:17_czE4OmZzNDphczE0OmZlczI=_config");
+
+         // single faulty-mode with extra normal (small state set)
 //        Optional<Object[]> loaded = CommonUtils
 //                .loadDFAConfigs("2020-01-09 22:54:38_czE4OmZzNDphczE2OmZlczI=_config");
-
+        // single faulty mode with extra normal (big state set)
         Optional<Object[]> loaded = CommonUtils
-                .loadDFAConfigs("2020-01-14 14:09:47_czE3OmZzNDphczE0OmZlczI=_config");
+                .loadDFAConfigs("2020-03-16 23:13:34_czgwOmZzODphczE4OmZlczQ=_config");
+
+        // multi-faulty mode with extra normal (small state set)
+//        Optional<Object[]> loaded = CommonUtils
+//                .loadDFAConfigs("2020-01-14 14:09:47_czE3OmZzNDphczE0OmZlczI=_config");
+        // multi-faulty mode with extra normal (big state set)
+//        Optional<Object[]> loaded = CommonUtils
+//                .loadDFAConfigs("2020-03-14 15:24:26_czgwOmZzODphczIwOmZlczQ=_config");
         if (loaded.isPresent()) {
             Object[] res = loaded.get();
 

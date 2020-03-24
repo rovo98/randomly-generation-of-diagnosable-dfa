@@ -1,8 +1,10 @@
+# idea / eclipse project files.
 .idea
 *.iml
 .project
 .classpath
 .settings
+
 target/
 log/
 

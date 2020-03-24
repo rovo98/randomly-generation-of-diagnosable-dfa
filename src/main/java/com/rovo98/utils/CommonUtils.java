@@ -80,7 +80,7 @@ public class CommonUtils {
      * Loaded saved dfa configurations from file.
      *
      * @param filename name of the file to be loaded in specified path.
-     * @return Optional contains the loaded objects if success;
+     * @return Optional contains the loaded objects(dfaRoot, dfaConfig) if success;
      * otherwise empty Optional.
      */
     public static Optional<Object[]> loadDFAConfigs(String filename) {
