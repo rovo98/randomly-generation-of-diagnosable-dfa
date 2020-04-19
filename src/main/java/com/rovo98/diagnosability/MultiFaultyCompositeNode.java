@@ -11,7 +11,7 @@ import java.util.List;
  * <br />
  * <br />
  * More details, see jiang's paper - <a href="https://ieeexplore.ieee.org/document/940942">
- *     A Polynomial Algorithm for Testing Diagnosability of Discrete-Event Systems</a>}
+ *     A Polynomial Algorithm for Testing Diagnosability of Discrete-Event Systems</a>.
  * <br />
  *
  * @author rovo98

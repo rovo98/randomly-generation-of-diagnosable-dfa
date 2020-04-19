@@ -22,11 +22,13 @@ import java.util.Random;
  * Generating logs, and then save the logs to the specified location (or a fixed location).
  * <br />
  * Storage location can be specified in AppConfigs.properties file in the classpath.
- *
+ * <br />
  * NOTICE: before calling the generate() method, the following options can be tuned.
- * - minSteps: default 10
- * - maxSteps: default 100
- * - verbose : default false.
+ * <ul>
+     * <li>minSteps: default 10</li>
+     * <li>maxSteps: default 100</li>
+     * <li>verbose : default false.</li>
+ * </ul>
  *
  * @author rovo98
  * @version 1.0.0
@@ -230,6 +232,7 @@ public class RunningLogsGenerator {
      *
      * @param filename the name of the file to save logs.
      */
+    @SuppressWarnings("DuplicatedCode")
     private static void save(String filename, DFAConfig dfaConfig) {
 
         LOGGER.info("Saving the generated logs to file : {}", filename);
