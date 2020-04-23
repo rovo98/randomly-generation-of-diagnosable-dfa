@@ -18,13 +18,16 @@
 
 一个简单的例子如下:
 
-![construction-of-dfas-without-randomization](./images/non-randomly-construction-of-dfas-with-faulty-events.png)
+<div align="center" style="display:flex; flex-direction:column;">
+    <img src="./images/non-randomly-construction-of-dfas-with-faulty-events.png" />
+    <span style='padding-top:0.5em;'>fig 1&nbsp;&nbsp;Single Faulty mode DFA architecture illustration</span>
+</div>
 
-> 当前思路
-> 1. 使用数据结构：directed graph (有向图) 来构造上面假设中的每个部分
-> 2. 每个部分图结构中的节点可以随机连接 (即state transitions 随机)，
+当前思路：
+1. 使用数据结构：directed graph (有向图) 来构造上面假设中的每个部分
+2. 每个部分图结构中的节点可以随机连接 (即state transitions 随机)
 
-Issues: 如何确保在生成 running logs 时，每一种错误类型的观察都能被生成?
+**Issues**: 如何确保在生成 running logs 时，每一种错误类型的观察都能被生成?
 > 如何在 正常状态集组成的图中定位到特定的转向某种错误的类型相应组件的节点 (node)。- 该问题如果无法解决，将有可能一直在一个图组件中循环跑。
 > **当前解决方案：使用一个数组来记录已访问节点，然后找到指向的下一个节点为需要特定错误节点的的节点。**
 
@@ -60,47 +63,101 @@ Issues: 如何确保在生成 running logs 时，每一种错误类型的观察�
 
 使用上面方式生成 DFA 的一个例子。
 
-![dfa-example-01](./images/DFA-construction-examle-01.png)
+<div align="center" style="display:flex; flex-direction:column;">
+    <img src="./images/DFA-construction-examle-01.png" />
+    <span style='padding-top:0.5em;'>fig 2&nbsp;&nbsp;DFA generation procedure sample</span>
+</div>
 > 图示，选择的总状态集大小为 63, 错误状态集大小为 6, 输入字母表 alphabet 大小为 15, 错误事件集 (unobservable) 大小为 3, 错误事件集为 ``[l, m, z]``。
 >
 > 选择 states[0,56] 来构建状态状态集， states[57,58], states[59:60], states[61:62] 作为错误状态集。
 
 使用 debug 的方式，来查看我们构建出来的组件, DFA。
 
-![dfa-example-02](./images/DFA-construction-examle-02.png)
+<div align="center" style="display:flex; flex-direction:column;">
+    <img src="./images/DFA-construction-examle-02.png" />
+    <span style='padding-top:0.5em;'>fig 3&nbsp;&nbsp;DFA constructed components</span>
+</div>
 > 一个正常状态集构成的组件，三个错误状态集构成的组件。
-
-1. 错误状态集 1 (states[57:58]) 构建的组件
-![dfa-example-03](./images/DFA-construction-examle-03_faulty_1.png)
-2. 错误状态集 2 (states[59:60]) 构建的组件
-![dfa-example-04](./images/DFA-construction-examle-03_faulty_2.png)
-3. 错误状态集 3 (states[61:62]) 构建的组件
-![dfa-example-05](./images/DFA-construction-examle-03_faulty_3.png)
+<div style='display:grid; grid-template-rows: 50% 50%; grid-template-columns: 50% 50%;'>
+    <div>
+        <img src='./images/DFA-construction-examle-03_faulty_1.png'/>
+        <div align="center" style="padding-top:0.5em; padding-bottom:0.5em;">
+            <span>(a) 错误状态集 1 (states[57:58]) 构建的组件</span>
+        </div>
+    </div>
+    <div>
+        <img src='./images/DFA-construction-examle-03_faulty_2.png'/>
+        <div align="center" style="padding-top:0.5em;">
+            <span>(b) 错误状态集 2 (states[59:60]) 构建的组件</span>
+        </div>
+    </div>
+    <div>
+        <img src='./images/DFA-construction-examle-03_faulty_3.png'/>
+        <div align="center" style="padding-top:0.5em;">
+            <span>(c) 错误状态集 3 (states[61:62]) 构建的组件</span>
+        </div>
+    </div>
+</div>
+<div align="center" style="padding-top:0.5em;">
+    <span>Fig 4 Faulty components</span>
+</div>
 
 > 可以看到，每个错误状态组件中发生的状态转换，得到下一个状态只能是该组件中的状态。
 
 并且，对于每个错误状态组件，正常状态组件中只有一个相应的错误状态转换。将正常状态组件与所有错误状态组件连接后，正常状态组件中存在错误状态转换的节点如下:
 
-1. 错误事件 ``z`` 对应的状态转换
-![dfa-example-06](./images/DFA-construction-examle-04_faulty_1.png)
-2. 错误事件 ``m`` 对应的状态转换
-![dfa-example-07](./images/DFA-construction-examle-04_faulty_2.png)
-3. 错误事件 ``l`` 对应的状态转换
-![dfa-example-08](./images/DFA-construction-examle-04_faulty_3.png)
-
+<div style='display:grid; grid-template-rows: 50% 50%; grid-template-columns: 50% 50%;'>
+    <div>
+        <img src='./images/DFA-construction-examle-04_faulty_1.png'/>
+        <div align="center" style="padding-top:0.5em;">
+            <span>(a) 错误事件 z 对应的状态转换</span>
+        </div>
+    </div>
+    <div>
+        <img src='./images/DFA-construction-examle-04_faulty_2.png'/>
+        <div align="center" style="padding-top:0.5em;">
+            <span>(b) 错误事件 m 对应的状态转换</span>
+        </div>
+    </div>
+    <div style="padding-top:14px;">
+        <img src='./images/DFA-construction-examle-04_faulty_3.png'/>
+        <div align="center" style="padding-top:0.5em;">
+            <span>(c) 错误事件 l 对应的状态转换</span>
+        </div>
+    </div>
+</div>
+<div align="center" style="padding-top:0.5em;">
+    <span>Fig 5 Faulty state transtions</span>
+</div>
 > NOTICE: 允许多个错误状态转换出现在同一个节点上。
 
 以上是一个简单的 DFA 构建例子，状态集比较小，为了满足错误状态集远小于正常状态集，这使得每个错误状态集变得更小。
 
 ### more illustration examples
 
-![](./images/dfa-example_01_czE0OmZzNDphczk6ZmVzMg==_arch.jpg)
-![](./images/dfa-example_02_czE2OmZzNDphczg6ZmVzMg==_arch.png)
-![](./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_01_arch.png)
-![](./images/dfa-example_04_czE5OmZzNDphczE1OmZlczI=_arch.jpg)
-![](./images/dfa-example_05_czE5OmZzNDphczEzOmZlczI=_arch.jpg)
-![](./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_01_arch.png)
-
+<div style='display:grid; grid-template-rows: 33% 33% 33%; grid-template-columns: 50% 50%;'>
+    <div>
+        <img src='./images/dfa-example_01_czE0OmZzNDphczk6ZmVzMg==_arch.jpg'/>
+    </div>
+    <div>
+        <img src='./images/dfa-example_02_czE2OmZzNDphczg6ZmVzMg==_arch.png'/>
+    </div>
+    <div style="padding-top:2em;">
+        <img src='./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_01_arch.png'/>
+    </div>
+    <div>
+        <img src='./images/dfa-example_04_czE5OmZzNDphczE1OmZlczI=_arch.jpg'/>
+    </div>
+    <div style="padding-top:5em;">
+        <img src='./images/dfa-example_05_czE5OmZzNDphczEzOmZlczI=_arch.jpg'/>
+    </div>
+    <div>
+        <img src='./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_01_arch.png'/>
+    </div>
+</div>
+<div align="center" style="padding-top:0.5em;">
+    <span>Fig 6 Generated DFA examples</span>
+</div>
 <del>### Remarks</del>
 
 <del>根据 DES 的可诊断性定义，当前构造方式的构造的 DFA 是可诊断的，因此产生的所有 running-logs 数据就是符合要求的数据。</del>
@@ -115,8 +172,10 @@ Issues: 如何确保在生成 running logs 时，每一种错误类型的观察�
 >
 >REMARKS： 错误状态组件到该正常状态组件的转换是单向的，且进入正常状态组件后无法再跳转出去。
 
-fig example:
-![](./images/non-randomly-construction-of-dfas-with-faulty-events_with-extra-normal.png)
+<div align='center' style='display:flex; flex-direction:column;'>
+    <img src='./images/non-randomly-construction-of-dfas-with-faulty-events_with-extra-normal.png'/>
+    <span style="padding-top:0.5em;">Fig 7 Single faulty mode DFA with extra normal state compoent architecture</span>
+</div>
 
 - [x] Code implementation integration.
 
@@ -150,11 +209,17 @@ References:
 #### example 1
 
 1. 通过上面方式生成的 DFA。
-![](./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_01_arch.png)
+<div align='center'>
+    <img src='./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_01_arch.png'/>
+</div>
 2. 获得 DFA 的一个 nondeterministic finite state machine $G_o$
-![](./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_02_nd-observer.png)
+<div align='center'>
+    <img src='./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_02_nd-observer.png'/>
+</div>
 3. 计算上面获得 $G_o$ 和其自身的 Composition 组合 (在该情况下，实际上是 product $X$ 操作, 因为两个 $G_o$ 拥有相同的事件集)，看是否存在标签不一致的状态是否存在回路 (cycle, 环)来判断该 DFA 是否具备 diagnosability.
-![](./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_03_composition.png)
+<div align='center'>
+    <img src='./images/dfa-example_06_czEzOmZzNDphczc6ZmVzMg==_03_composition.png'/>
+</div>
 4. 对于所有具有不同状态标签的组合节点，判断是否存在一个回路 cycle / 环回到它自身。
 > 该 DFA 不可诊断。
 
@@ -162,24 +227,34 @@ References:
 #### example 2
 
 1. generated DFA.
-![](./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_01_arch.png)
+<div align='center'>
+    <img src='./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_01_arch.png'/>
+</div>
 2. Obtains a nondeterministic finite machine of the given DFA.
-![](./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_02_nd-observer.png)
+<div align='center'>
+    <img src='./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_02_nd-observer.png'/>
+</div>
 3. Computes the product composition of the two same nd-observer got above.
-![](./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_03_composition.png)
+<div align='center'>
+    <img src='./images/dfa-example_03_czE4OmZzNDphczE0OmZlczI=_03_composition.png'/>
+</div>
 4. Checking whether there exists a cycle starting from nodes whose state has different labels.
 > 该 DFA 具备可诊断性。
 
 #### example 3 - with extra normal component.
 
 1. The architecture of the given constructed dfa.
-![](./images/dfa-example_08_czE4OmZzNDphczE2OmZlczI=_extra_normal_01_arch.png)
-
+<div align='center'>
+    <img src='./images/dfa-example_08_czE4OmZzNDphczE2OmZlczI=_extra_normal_01_arch.png'/>
+</div>
 2. Obtains a nondeterministic finite machine of the given dfa.
-![](./images/dfa-example_08_czE4OmZzNDphczE2OmZlczI=_extra_normal_02_nd_observer.png)
-
+<div align='center'>
+    <img src='./images/dfa-example_08_czE4OmZzNDphczE2OmZlczI=_extra_normal_02_nd_observer.png'/>
+</div>
 3. Computes the product composition of the two same nondeterministic finite machines got before.
-![](./images/dfa-example_08_czE4OmZzNDphczE2OmZlczI=_extra_normal_03_composition.png)
+<div align='center'>
+    <img src='./images/dfa-example_08_czE4OmZzNDphczE2OmZlczI=_extra_normal_03_composition.png'/>
+</div>
 > This constructed dfa is diagnosable.
 
 ## 3. Multi-faulty mode
@@ -191,13 +266,17 @@ References:
 The following is an example with multi-faulty mode and extra normal component.
 
 1. The architecture of the constructed dfa.
-![](./images/dfa-example_07_czE3OmZzNDphczE0OmZlczI=_multi-faulty_01_arch.png)
-
+<div align='center'>
+    <img src='./images/dfa-example_07_czE3OmZzNDphczE0OmZlczI=_multi-faulty_01_arch.png'/>
+</div>
 2. Obtains nondeterministic finite machine of the given dfa.
-![](./images/dfa-example_07_czE3OmZzNDphczE0OmZlczI=_multi-faulty_02_nd-observer.png)
-
+<div align='center'>
+    <img src='./images/dfa-example_07_czE3OmZzNDphczE0OmZlczI=_multi-faulty_02_nd-observer.png'/>
+</div>
 3. Computes the product composition of two same nd-observer got above.
-![](./images/dfa-example_07_czE3OmZzNDphczE0OmZlczI=_multi-faulty_03_composition.png)
+<div align='center'>
+    <img src='./images/dfa-example_07_czE3OmZzNDphczE0OmZlczI=_multi-faulty_03_composition.png'/>
+</div>
 > This dfa is diagnosable.
 
 ## Issues
@@ -209,6 +288,8 @@ The following is an example with multi-faulty mode and extra normal component.
 
 相对于将一个错误组件与其他所有错误组件进行连接，使用这种方式可以减少连接后的 DFA 的复杂度。以确保生成的 DFA 尽量是具备可诊断性的。
 
-![](./images/dfa-multi-faulty-mode-generation-testing.png)
+<div align='center'>
+    <img src='./images/dfa-multi-faulty-mode-generation-testing.png'/>
+</div>
 
 从上图的测试看，选择 70-100状态进行构造时，经过 52 次构造才出现具备可诊断性的 DFA。效率还是有点低了。
