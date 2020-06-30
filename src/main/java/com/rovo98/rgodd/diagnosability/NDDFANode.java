@@ -1,4 +1,4 @@
-package com.rovo98.diagnosability;
+package com.rovo98.rgodd.diagnosability;
 
 import java.util.LinkedList;
 import java.util.List;

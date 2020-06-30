@@ -1,4 +1,4 @@
-package com.rovo98.exceptions;
+package com.rovo98.rgodd.exceptions;
 
 /**
  * This exception will be thrown when the given symbol of one specified transition not found.

@@ -1,6 +1,6 @@
-package com.rovo98.egr;
+package com.rovo98.rgodd.egr;
 
-import com.rovo98.DFANode;
+import com.rovo98.rgodd.DFANode;
 
 import java.io.*;
 import java.nio.file.Files;

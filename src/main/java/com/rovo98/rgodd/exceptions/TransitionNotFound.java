@@ -1,4 +1,4 @@
-package com.rovo98.exceptions;
+package com.rovo98.rgodd.exceptions;
 
 /**
  * This Runtime Exception will be thrown when target transition not found.

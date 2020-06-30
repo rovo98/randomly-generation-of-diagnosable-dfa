@@ -4,4 +4,4 @@
  * @author rovo98
  * @since 1.0
  */
-package com.rovo98;
+package com.rovo98.rgodd;

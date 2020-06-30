@@ -1,6 +1,6 @@
-package com.rovo98;
+package com.rovo98.rgodd;
 
-import com.rovo98.utils.CommonUtils;
+import com.rovo98.rgodd.utils.CommonUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

@@ -1,7 +1,7 @@
-package com.rovo98.diagnosability;
+package com.rovo98.rgodd.diagnosability;
 
-import com.rovo98.DFAConfig;
-import com.rovo98.DFANode;
+import com.rovo98.rgodd.DFAConfig;
+import com.rovo98.rgodd.DFANode;
 
 /**
  * Defining basic behaviors of the diagnoser constructing from the given DFA.

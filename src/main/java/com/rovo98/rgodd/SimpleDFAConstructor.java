@@ -1,8 +1,8 @@
-package com.rovo98;
+package com.rovo98.rgodd;
 
-import com.rovo98.diagnosability.Diagnoser;
-import com.rovo98.diagnosability.NeotypeDiagnoser;
-import com.rovo98.utils.CommonUtils;
+import com.rovo98.rgodd.diagnosability.Diagnoser;
+import com.rovo98.rgodd.diagnosability.NeotypeDiagnoser;
+import com.rovo98.rgodd.utils.CommonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

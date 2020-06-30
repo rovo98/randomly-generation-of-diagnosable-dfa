@@ -1,4 +1,4 @@
-package com.rovo98;
+package com.rovo98.rgodd;
 
 import java.io.Serializable;
 import java.util.HashMap;

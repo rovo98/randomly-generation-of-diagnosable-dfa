@@ -1,6 +1,6 @@
-package com.rovo98;
+package com.rovo98.rgodd;
 
-import com.rovo98.exceptions.SymbolNotFound;
+import com.rovo98.rgodd.exceptions.SymbolNotFound;
 
 import java.io.Serializable;
 import java.util.HashMap;

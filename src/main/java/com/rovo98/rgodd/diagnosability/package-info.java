@@ -3,4 +3,4 @@
  *
  * @author rovo98
  */
-package com.rovo98.diagnosability;
+package com.rovo98.rgodd.diagnosability;

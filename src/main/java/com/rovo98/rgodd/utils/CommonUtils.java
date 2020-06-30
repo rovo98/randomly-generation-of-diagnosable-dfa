@@ -1,11 +1,11 @@
-package com.rovo98.utils;
+package com.rovo98.rgodd.utils;
 
-import com.rovo98.DFAConfig;
-import com.rovo98.DFANode;
-import com.rovo98.diagnosability.CompositeNode;
-import com.rovo98.diagnosability.MultiFaultyCompositeNode;
-import com.rovo98.diagnosability.MultiFaultyNDDFANode;
-import com.rovo98.diagnosability.NDDFANode;
+import com.rovo98.rgodd.DFAConfig;
+import com.rovo98.rgodd.DFANode;
+import com.rovo98.rgodd.diagnosability.CompositeNode;
+import com.rovo98.rgodd.diagnosability.MultiFaultyCompositeNode;
+import com.rovo98.rgodd.diagnosability.MultiFaultyNDDFANode;
+import com.rovo98.rgodd.diagnosability.NDDFANode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

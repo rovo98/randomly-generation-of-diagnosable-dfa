@@ -1,6 +1,6 @@
-package com.rovo98;
+package com.rovo98.rgodd;
 
-import com.rovo98.utils.CommonUtils;
+import com.rovo98.rgodd.utils.CommonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

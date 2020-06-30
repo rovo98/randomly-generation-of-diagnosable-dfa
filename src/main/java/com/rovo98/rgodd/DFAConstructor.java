@@ -1,4 +1,4 @@
-package com.rovo98;
+package com.rovo98.rgodd;
 
 /**
  * Interface defines the behaviors of RandomDFAConstructors.
