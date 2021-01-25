@@ -46,7 +46,7 @@ dataset.
 
 ### Diagnosability testing
 
-Using the algorithm proposed by Jiang SengBin - ([A polynomial Algorithm for Testing Diagnosability of Discrete-Event System](https://ieeexplore.ieee.org/document/940942) ) to test the diagnosability of the generated DFAs.
+Using the algorithm proposed by Jiang SengBing - ([A polynomial Algorithm for Testing Diagnosability of Discrete-Event System](https://ieeexplore.ieee.org/document/940942) ) to test the diagnosability of the generated DFAs.
 
 e.g.
 
