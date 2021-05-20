@@ -36,50 +36,37 @@ import java.util.Random;
  */
 public class RunningLogsGenerator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RunningLogsGenerator.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(RunningLogsGenerator.class);
 
-    private static Map<String, String> runningLogs;
+    private Map<String, String> runningLogs;
 
-    private static int[] statistics;
+    private int[] statistics;
 
     //Whether to show every generated logs as debug infos in console.
-    private static boolean showGeneratedLogs = false;
+    private final boolean showGeneratedLogs;
 
-    private static int minSteps = 10;
-    private static int maxSteps = 100;
+    /** Determine the minimum length of the log to be generated */
+    private final int minSteps;
 
-    // this class can not be instanced.
-    private RunningLogsGenerator() {
+    /** Determine the maximum length of the log to be generated */
+    private final int maxSteps;
+
+    public RunningLogsGenerator() {
+        this(10, 100, false);
     }
 
-    /**
-     * settings control whether to print out the debug msg for every generated logs.
-     * False by default.
-     *
-     * @param verbose {@code true} for yes, and {@code false} for no
-     */
-    public static void setVerbose(boolean verbose) {
-        showGeneratedLogs = verbose;
+    public RunningLogsGenerator(boolean showGeneratedLogs) {
+        this(10, 100, showGeneratedLogs);
     }
 
-    /**
-     * Setting minimum length of the generated log.
-     * By default, 10 is token.
-     *
-     * @param ms An Integer representing minimum length of the log to be generated.
-     */
-    public static void setMinSteps(int ms) {
-        minSteps = ms;
+    public RunningLogsGenerator(int minSteps, int maxSteps) {
+        this(minSteps, maxSteps, false);
     }
 
-    /**
-     * Setting maximum length of the generated log.
-     * By default, 100 is token
-     *
-     * @param ms An Integer representing maximum length of the log to be generated.
-     */
-    public static void setMaxSteps(int ms) {
-        maxSteps = ms;
+    public  RunningLogsGenerator(int minSteps, int maxSteps, boolean showGeneratedLogs) {
+        this.minSteps = minSteps;
+        this.maxSteps = maxSteps;
+        this.showGeneratedLogs = showGeneratedLogs;
     }
 
     /**
@@ -89,7 +76,7 @@ public class RunningLogsGenerator {
      * @param dfaRoot   the root node of the constructed dfa.
      * @param dfaConfig configuration of the constructed dfa.
      */
-    public static void generate(int logSize, DFANode dfaRoot, DFAConfig dfaConfig) {
+    public void generate(int logSize, DFANode dfaRoot, DFAConfig dfaConfig) {
         generate(logSize, dfaRoot, dfaConfig, false);
     }
 
@@ -101,7 +88,7 @@ public class RunningLogsGenerator {
      * @param dfaConfig  configuration of the constructed dfa.
      * @param saveToFile whether to save the generated logs to file.
      */
-    public static void generate(int logSize, DFANode dfaRoot, DFAConfig dfaConfig, boolean saveToFile) {
+    public void generate(int logSize, DFANode dfaRoot, DFAConfig dfaConfig, boolean saveToFile) {
         // TODO: dfa validation may be needed, dfa should be constructed and Config should well prepared.
         // FIXME: code refactoring may be needed here, the constructed dfa should be diagnosable before
 
@@ -144,7 +131,7 @@ public class RunningLogsGenerator {
 
     // returns true if the logs already contains a log with the same observation
     // to new come log.
-    private static void removeConflictedAdd(Map<String, String> logs, String newComeLog) {
+    private void removeConflictedAdd(Map<String, String> logs, String newComeLog) {
         // if logs set already contains the newComeLog.
         String[] splitNewComeLog = newComeLog.split("T");
         String newComeObservation = splitNewComeLog[0];
@@ -161,7 +148,7 @@ public class RunningLogsGenerator {
     }
 
     // Attaching the log type. Only single faulty mode is considered.
-    private static String attachingLabel(StringBuilder log, DFAConfig dfaConfig) {
+    private String attachingLabel(StringBuilder log, DFAConfig dfaConfig) {
         for (int i = 0; i < dfaConfig.unobservableEvents.length; i++) {
             if (log.toString().indexOf(dfaConfig.unobservableEvents[i]) >= 0) {
                 log = new StringBuilder(log.toString()
@@ -180,7 +167,7 @@ public class RunningLogsGenerator {
     }
 
     // Attaching the log types. multi-faulty mode is considered.
-    private static String attachingLabelMultiFaulty(StringBuilder log, DFAConfig dfaConfig) {
+    private String attachingLabelMultiFaulty(StringBuilder log, DFAConfig dfaConfig) {
         int faultyTypes = dfaConfig.faultyEvents.length;
         byte[] faultyFlags = new byte[faultyTypes];
         for (int i = 0; i < dfaConfig.unobservableEvents.length; i++) {
@@ -201,7 +188,7 @@ public class RunningLogsGenerator {
     }
 
     // returns a running log of the random stopSteps length.
-    private static String containsVisitedTraversal(int stopSteps, DFANode root, DFAConfig dfaConfig) {
+    private String containsVisitedTraversal(int stopSteps, DFANode root, DFAConfig dfaConfig) {
         if (showGeneratedLogs)
             LOGGER.debug("constructing a log using visited approach, expected len->{}", stopSteps);
         DFANode pNode = root;
@@ -233,7 +220,7 @@ public class RunningLogsGenerator {
      * @param filename the name of the file to save logs.
      */
     @SuppressWarnings("DuplicatedCode")
-    private static void save(String filename, DFAConfig dfaConfig) {
+    private void save(String filename, DFAConfig dfaConfig) {
 
         LOGGER.info("Saving the generated logs to file : {}", filename);
         // loads storage location config.
@@ -288,11 +275,9 @@ public class RunningLogsGenerator {
      * @param args command-line arguments.
      */
     public static void main(String[] args) {
-        RunningLogsGenerator.setVerbose(true);
-        RunningLogsGenerator.setMinSteps(15);
-        RunningLogsGenerator.setMaxSteps(20);
+        RunningLogsGenerator runningLogsGenerator = new RunningLogsGenerator(15, 20, true);
         DFAConstructor constructor = SimpleDFAConstructor.getInstance();
-        RunningLogsGenerator.generate(
+        runningLogsGenerator.generate(
                 10,
                 constructor.constructRandomDFAWithDiagnosability(11, 20, false),
                 constructor.getDFAConfig());

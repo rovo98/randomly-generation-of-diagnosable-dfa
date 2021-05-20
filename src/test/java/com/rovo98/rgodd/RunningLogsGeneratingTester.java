@@ -11,10 +11,8 @@ public class RunningLogsGeneratingTester {
     @Test
     void generatingLogs() {
         DFAConstructor dfaConstructor = SimpleDFAConstructor.getInstance();
-        RunningLogsGenerator.setVerbose(true);
-        RunningLogsGenerator.setMinSteps(45);
-//        RunningLogsGenerator.setMaxSteps(40);
-        RunningLogsGenerator.generate(
+        RunningLogsGenerator runningLogsGenerator = new RunningLogsGenerator(45, 100, true);
+        runningLogsGenerator.generate(
                 20,
                 dfaConstructor.constructRandomDFAExtraNormalWithDiagnosability(
                         50, 80, true),
@@ -44,9 +42,7 @@ public class RunningLogsGeneratingTester {
         DFAConfig dfaConfig = (DFAConfig) config[1];
 
         CommonUtils.printDfaConfigs(dfaConfig);
-        RunningLogsGenerator.setMinSteps(10);
-        RunningLogsGenerator.setMaxSteps(200);
-        RunningLogsGenerator.setVerbose(false);
-        RunningLogsGenerator.generate(40_000, dfaRoot, dfaConfig, true);
+        RunningLogsGenerator runningLogsGenerator = new RunningLogsGenerator(10, 200, false);
+        runningLogsGenerator.generate(40_000, dfaRoot, dfaConfig, true);
     }
 }

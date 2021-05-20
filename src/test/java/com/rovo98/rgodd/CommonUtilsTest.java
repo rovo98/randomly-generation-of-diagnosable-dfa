@@ -54,10 +54,8 @@ public class CommonUtilsTest {
         assertNotNull(dfaConfig);
 
         CommonUtils.printDfaConfigs(dfaConfig);
-        RunningLogsGenerator.setVerbose(true);
-        RunningLogsGenerator.setMinSteps(20);
-        RunningLogsGenerator.setMaxSteps(40);
-        RunningLogsGenerator.generate(10, root, dfaConfig, false);
+        RunningLogsGenerator runningLogsGenerator = new RunningLogsGenerator(20, 40, true);
+        runningLogsGenerator.generate(10, root, dfaConfig, false);
     }
 
     @Test

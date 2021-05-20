@@ -42,14 +42,14 @@ public class NeotypeDiagnoser implements Diagnoser {
     public static final Logger LOGGER = LoggerFactory.getLogger(NeotypeDiagnoser.class);
     // stores all observer nodes for checking diagnosability
     // using observer node's identical key as key.
-    private Map<String, NDDFANode> ndDfaNodeMap;
+    private final Map<String, NDDFANode> ndDfaNodeMap;
     // stores all composite nodes for checking diagnosability
     // using composite node's identical key as key.
-    private Map<String, CompositeNode> compositeNodeMap;
+    private final Map<String, CompositeNode> compositeNodeMap;
 
     // for multi-faulty mode.
-    private Map<String, MultiFaultyNDDFANode> multiFaultyNDDFANodeMap;
-    private Map<String, MultiFaultyCompositeNode> multiFaultyCompositeNodeMap;
+    private final Map<String, MultiFaultyNDDFANode> multiFaultyNDDFANodeMap;
+    private final Map<String, MultiFaultyCompositeNode> multiFaultyCompositeNodeMap;
 
     // this class can not be instanced outside this class.
     private NeotypeDiagnoser() {
@@ -102,22 +102,7 @@ public class NeotypeDiagnoser implements Diagnoser {
         // modification of the algorithm for detecting cycle in directed graph.
         Set<String> visitedKeys = new HashSet<>(compositeNodeMap.size());
         Set<String> recStack = new HashSet<>(compositeNodeMap.size());
-        // for debug usage only.
-        System.out.println("=======================================================\n");
-        System.out.println("\t\tDEBUG usage only... (Cycle Testing), target nodes size: " + targets.size());
-//        for (CompositeNode cn : targets) {
-//            // reset visited and recursion stack for every node checking.
-//            visitedKeys.clear();
-//            recStack.clear();
-//
-//            System.out.print(cn.firstState + "," + cn.firstFailureType + ":" + cn.secondState + "," +
-//                    cn.secondFailureType);
-//            if (existCycle(cn, cn, visitedKeys, recStack))
-//                System.out.println(": existed.\n");
-//            else
-//                System.out.println(": not existed.\n");
-//        }
-        System.out.println("=======================================================\n");
+
         for (CompositeNode cn : targets) {
             // reset visited and recursion stack for every node checking.
             visitedKeys.clear();
@@ -153,23 +138,7 @@ public class NeotypeDiagnoser implements Diagnoser {
         // modification of the algorithm for detecting cycle in directed graph.
         Set<String> visitedKeys = new HashSet<>(multiFaultyCompositeNodeMap.size());
         Set<String> recStack = new HashSet<>(multiFaultyCompositeNodeMap.size());
-        // for debug usage only.
-        System.out.println("=======================================================\n");
-        System.out.println("\t\tDEBUG usage only... (Cycle Testing)");
-        System.out.println("target nodes size: " + targets.size());
-//        for (MultiFaultyCompositeNode cn : targets) {
-//            // reset visited and recursion stack for every node checking.
-//            visitedKeys.clear();
-//            recStack.clear();
-//
-//            System.out.print(cn.firstState + "," + cn.firstFailureTypes + ":" + cn.secondState + "," +
-//                    cn.secondFailureTypes);
-//            if (existCycle(cn, cn, visitedKeys, recStack))
-//                System.out.println(": existed.\n");
-//            else
-//                System.out.println(": not existed.\n");
-//        }
-        System.out.println("=======================================================\n");
+
         for (MultiFaultyCompositeNode cn : targets) {
             // reset visited and recursion stack for every node checking.
             visitedKeys.clear();

@@ -18,12 +18,11 @@ import java.util.stream.Collectors;
  * @version 1.0.0
  * @since 2019-12-21
  */
-// TODO: using factory pattern to create DFAConstructor may more elegant.
 public class SimpleDFAConstructor implements DFAConstructor {
+    public final Logger LOGGER = LoggerFactory.getLogger(SimpleDFAConstructor.class);
 
-    public static final Logger LOGGER = LoggerFactory.getLogger(SimpleDFAConstructor.class);
-
-    private DFAConfig dfaConfig; // configuration for this DFA constructor.
+    // configuration for this DFA constructor.
+    private DFAConfig dfaConfig;
 
     // this class can not be instanced outside this class.
     private SimpleDFAConstructor() {
@@ -269,7 +268,7 @@ public class SimpleDFAConstructor implements DFAConstructor {
             for (int i = 0; i < numOfFaultyComps; i++) {
                 // mark current faulty component as selected
                 selected[i] = true;
-                int numOfCompsToBeConnected = r.nextInt(numOfFaultyComps-1) + 1;
+                int numOfCompsToBeConnected = r.nextInt(numOfFaultyComps - 1) + 1;
                 for (int j = 0; j < numOfCompsToBeConnected; j++) {
                     int chosen = r.nextInt(numOfFaultyComps);
                     while (chosen == i || selected[chosen]) {
@@ -282,14 +281,6 @@ public class SimpleDFAConstructor implements DFAConstructor {
                 // reset selected flags.
                 Arrays.fill(selected, false);
             }
-//            for (DFANode component : faultyComponents) {
-//                for (int i = 0; i < faultyComponents.length; i++) {
-//                    connectingCompWithFaultyComp(component, faultyComponents[i], i,
-//                            minSteps, maxSteps, true);
-//                }
-                // choosing 1 ~ max faulty components to connected with - maybe adaptable.
-                // NOTICE: A more simple approach: this implementation does not cover all faulty types.
-//            }
             LOGGER.debug("====>\tMulti-faulty component connection done!");
         }
 
@@ -595,7 +586,7 @@ public class SimpleDFAConstructor implements DFAConstructor {
      */
     public static void main(String[] args) {
         DFAConstructor constructor = SimpleDFAConstructor.getInstance();
-        DFANode constructedRoot = constructor.constructRandomDFAExtraNormalWithDiagnosability(
+        constructor.constructRandomDFAExtraNormalWithDiagnosability(
                 80, 100, false, true);
     }
 }
