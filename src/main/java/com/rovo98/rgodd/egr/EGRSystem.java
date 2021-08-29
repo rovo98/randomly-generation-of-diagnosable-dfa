@@ -293,7 +293,6 @@ public class EGRSystem implements Serializable {
     public static void main(String[] args) {
         EGRSystem egrSystem = EGRSystem.getInstance();
 //        egrSystem.setVerbose(true);
-
         egrSystem.generateOriLogs(40_000, true, true);
     }
 }
